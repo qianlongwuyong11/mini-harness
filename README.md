@@ -157,7 +157,7 @@ you> 审计全部笔记的断链和重复标题，先给计划，不要直接修
 you> 修复已经确认的断链，完成后重新审计
 ```
 
-知识库插件提供三个模型工具：
+知识库插件提供四个模型工具：
 
 - `kb_search`：按标题、路径、frontmatter 和正文进行本地加权检索，返回候选
   路径、匹配位置与片段；这是关键词及中文片段匹配，不是 Embedding 语义检索。
@@ -168,6 +168,9 @@ you> 修复已经确认的断链，完成后重新审计
   `.html`、`.htm`、`.json` 或 `.csv`，提取文本并写成知识库内的 UTF-8
   Markdown。参数包括必填的 `source_path`，以及可选的 `destination`、`title`
   和 `tags`。
+- `kb_repair`：批量修复 `kb_audit` 发现的问题。可选参数是 `issue_ids`、
+  `rules`、`dry_run`（默认 `true`）和 `max_tasks`。它不会删除、移动或重命名
+  笔记。
 
 导入结果会生成平面 frontmatter：
 
@@ -196,11 +199,37 @@ inbox 新文件 → 等待稳定 → 归档原文件 → kb_import_document → 
                                               → kb_audit → 状态输出
 自然语言任务 → kb_search/kb_audit → read/grep → 治理计划
              → edit/write → kb_audit 复审 → 最终报告
+批量修复任务 → kb_audit → kb_repair(dry_run=true) → 用户确认
+             → kb_repair(dry_run=false) → kb_audit 复审 → 最终报告
 ```
 
-`kb_audit` 只读；修复继续使用原有文件工具，因此保留 workspace 围栏、
+`kb_audit` 只读；单点修复继续使用原有文件工具，因此保留 workspace 围栏、
 read-before-write 和 mtime 并发检查。监听后的审计是确定性检查，不会在后台
 并发调用模型自动改写笔记；用户可以随后要求 Agent 查看并修复审计问题。
+
+### 并发修复的边界
+
+`kb_repair` 把「审计—调查—应用—复审」拆成四段，并发只出现在调查这一段：
+
+1. 主 Agent 按写集（`write_paths`）把 issue 聚合成任务。同一文件的多条断链
+   合并为一个任务；`duplicate_title` 涉及的全部笔记必须进同一个任务，否则两
+   个子 Agent 各改各的，改完仍然重复；`orphan` 需要改入口页，写集里因此包含
+   `index.md`。
+2. 冲突分批保证同一批内任意两个任务的 `write_paths` 不相交，同批并发、批与
+   批之间串行。共享入口页的任务会自然落到不同批次。
+3. 子 Agent 只拿到从主注册表投影出来的只读工具子集
+   （`read`、`grep`、`glob`、`kb_search`），产出结构化 `ChangeSet` JSON，
+   不写任何文件，也不能再往下委派。
+4. 主 Agent 串行应用 `ChangeSet`。每条编辑都要通过 kb_root 围栏、
+   `write_paths` 白名单、`old_string` 唯一性三重校验，再交给
+   `filesystem.edit`，由沙箱与 mtime 比对兜底。单条失败不回滚其他条目，但会
+   如实记录在 `RepairTaskResult.error` 中。
+
+`dry_run=true`（默认）只返回预览，不写盘；`dry_run=false` 应用后会按
+`kb_repair_auto_reaudit` 自动复审，报告里同时给出 `audit_before` 与
+`audit_after`，因此验收依据是文件终态而不是模型自述。子 Agent 输出非 JSON、
+越权写入白名单外的路径，或 `old_string` 不唯一时，对应任务标记为 `failed`
+或跳过，不影响同批其他任务。
 
 可以先列出内置评测案例而不调用模型：
 
@@ -215,6 +244,14 @@ uv run python eval/kb_governance_eval.py \
   --case broken-link --variant both --trials 1
 ```
 
+`--variant repair` 会额外打开 `kb_repair`，用于对比「逐个 read + edit」和
+「只读并发调查 + 串行应用」两条修复路径；`--variant all` 一次跑完三种组合：
+
+```bash
+uv run python eval/kb_governance_eval.py \
+  --case repair-concurrent --variant all --trials 1
+```
+
 `--trials 3` 会调用更多次真实模型并产生相应费用，用于比较 pass^3 稳定性。
 评测只根据修复后的文件终态、再次审计结果和 Session 判分，不采用模型自评。
 
@@ -222,11 +259,18 @@ uv run python eval/kb_governance_eval.py \
 
 Cordis 内核本身不实现模型调用、文件读写或任务管理。它只负责安装插件、连接插件依赖、分发事件，以及在卸载时清理资源。模型、工具、会话、提示词、运行循环、文件系统、技能和任务调度都由插件提供或扩展。这就是“一切皆插件”：内核保持精简，具体能力通过明确的扩展位置组合起来。
 
-插件不一定是模型能够调用的工具。`skill`、`ask_user_question` 和 `job_output` 会出现在模型的工具清单中；模型连接、会话、自动重试、关键节点保存和上下文裁剪等插件只在程序内部工作，不应出现在工具清单中。最终示例一共向模型注册 27 个工具，其中 `kb_search`、`kb_audit` 和 `kb_import_document` 来自知识库场景插件；其他插件负责支撑这些工具和运行循环。
+插件不一定是模型能够调用的工具。`skill`、`ask_user_question` 和 `job_output` 会出现在模型的工具清单中；模型连接、会话、自动重试、关键节点保存和上下文裁剪等插件只在程序内部工作，不应出现在工具清单中。最终示例一共向模型注册 28 个工具，其中 `kb_search`、`kb_audit`、`kb_import_document` 和 `kb_repair` 来自知识库场景插件；其他插件负责支撑这些工具和运行循环。
 
 `knowledge_watch_provider` 就是一个不注册模型工具的后台 Provider。它依赖
 `document_import` 和文件沙箱服务，安装时启动监听线程，卸载时设置停止事件并
 等待线程退出；因此没有把轮询逻辑塞入 Agent 主循环，也不会增加模型工具数量。
+
+`kb_repair_provider` 展示了另一种复用方式：它不新建第二套工具体系，而是从
+主 `ToolRegistry` 投影出只读子集交给子 Agent，并复用 `WorkflowEngine` 做并发、
+复用 `FilesystemService` 做写入。因此工具定义、沙箱围栏和 read-before-write
+都只有一份实现。`kb_repair_provider` 依赖 `workflow`，而 `workflow_provider`
+在知识库分支之后才挂载；Cordis 的 fiber 会在依赖就绪后自动加载，安装顺序不
+影响正确性。
 
 一个能力通常分成三层。服务定义（Service Definition）说明调用方可以依赖哪些方法；服务提供者（Provider）给出可以替换的具体实现；服务使用者（Consumer）再把这项服务接到提示词、模型工具或运行事件上。
 
@@ -324,6 +368,8 @@ JSON-RPC 的 `plan.set` 要求 `active` 是真正的 JSON boolean。字符串 `"
 
 `WorkflowEngine` 使用 Python 线程运行任务函数，支持并行执行和分阶段执行，并限制并发数与总任务数。线程不是安全隔离，不能执行不可信代码。模型调用 `workflow` 时只需提供简化后的 `tasks[]` 参数。官方参考版本使用 Worker Thread 执行受限 JavaScript 脚本，功能和隔离方式更完整。
 
+`run_subagent` 只做纯文本委派：它不给子智能体任何工具，因此子智能体无法核实事实。`run_tool_subagent` 补上这一层——同样是独立会话、不带父历史，但每一步都把调用方传入的工具集交给模型，并把工具结果以 `role="tool"` 回灌。工具集由调用方投影，子智能体不能自行扩权；未授权的工具名、非法参数和执行异常都被配对成工具结果，不会中断循环。`kb_repair` 就是它的第一个使用者：投影出来的四个工具全部只读，所以「线程不是安全边界」这一限制在这里是成立的——子智能体既不写盘也不执行不可信代码。
+
 ## 17.9 配置项 Settings
 
 默认配置位于 `agent` 命名空间，合并顺序仍是程序默认值、当前组合的基础值、用户设置，后者覆盖前者。
@@ -353,7 +399,12 @@ JSON-RPC 的 `plan.set` 要求 `active` 是真正的 JSON boolean。字符串 `"
     "kb_archive_dir": "archive",
     "kb_failed_dir": "failed",
     "kb_watch_interval_seconds": 2,
-    "kb_watch_stable_scans": 2
+    "kb_watch_stable_scans": 2,
+    "kb_repair_enabled": true,
+    "kb_repair_max_concurrency": 4,
+    "kb_repair_max_tasks": 16,
+    "kb_repair_subagent_max_steps": 6,
+    "kb_repair_auto_reaudit": true
   }
 }
 ```
@@ -364,6 +415,15 @@ JSON-RPC 的 `plan.set` 要求 `active` 是真正的 JSON boolean。字符串 `"
 `kb_root`。`kb_import_max_bytes` 默认是 20 MiB。frontmatter 教学实现只解析
 平面的 `key: value`。把 `kb_watch_enabled` 设为 `false` 可以保留手动导入工具
 但不创建目录、不启动监听线程。
+
+`kb_repair_max_concurrency` 是只读子 Agent 的并发上限，默认与
+`jobs_max_concurrency` 相同，此时直接复用共享的 `WorkflowEngine`，只有配置不
+同才会另建一个引擎。`kb_repair_max_tasks` 是单次调用规划的任务数上限，超出
+部分会以 `skipped` 状态如实回报，而不是被悄悄丢弃。
+`kb_repair_subagent_max_steps` 限制单个子 Agent 的步数，用于兜住不收敛的调
+查。`kb_repair_auto_reaudit` 控制应用后是否强制复审。把 `kb_repair_enabled`
+设为 `false` 时 provider 直接返回，不注册服务与工具，审计、导入、监听三条链
+路不受影响。
 
 知识库审计不会建立远端索引，但模型请求、Session JSONL 和 Spill 文件可能
 包含私人笔记片段。DeepSeek 是远端 API，因此敏感内容仍应先脱敏，不能把

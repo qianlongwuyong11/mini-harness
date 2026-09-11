@@ -87,6 +87,11 @@ AGENT_DEFAULTS = {
     "kb_failed_dir": "failed",
     "kb_watch_interval_seconds": 2,
     "kb_watch_stable_scans": 2,
+    "kb_repair_enabled": True,
+    "kb_repair_max_concurrency": 4,
+    "kb_repair_max_tasks": 16,
+    "kb_repair_subagent_max_steps": 6,
+    "kb_repair_auto_reaudit": True,
 }
 
 

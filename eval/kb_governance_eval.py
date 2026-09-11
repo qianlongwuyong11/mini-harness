@@ -120,10 +120,38 @@ CASES = (
         rules=("broken_link", "duplicate_title", "orphan"),
         allowed_changes=("index.md", "notes/a.md", "notes/b.md"),
     ),
+    EvalCase(
+        id="repair-concurrent",
+        task=(
+            "批量治理这个知识库：先 kb_audit 拿到全部问题，再用 kb_repair 生成"
+            "修复方案并应用，最后复审确认断链、重复标题和孤立笔记均已消失。"
+        ),
+        files={
+            "index.md": (
+                "# Index\n\n[缺失目标](notes/missing.md)\n"
+                "[错误目标](notes/typo.md)\n[A](notes/a.md)\n"
+            ),
+            "notes/a.md": "# 并发笔记\n\n介绍线程池。\n",
+            "notes/b.md": "# 并发笔记\n\n介绍 asyncio 事件循环。\n",
+            "notes/target.md": "# 正确目标\n\n第一个断链应该指向这里。\n",
+            "notes/typo-fix.md": "# 拼写修正\n\n第二个断链应该指向这里。\n",
+            "notes/lonely.md": "# 孤立笔记\n\n没有任何页面引用它。\n",
+        },
+        rules=("broken_link", "duplicate_title", "orphan"),
+        allowed_changes=(
+            "index.md",
+            "notes/a.md",
+            "notes/b.md",
+            "notes/lonely.md",
+        ),
+    ),
 )
 
+VARIANTS = ("baseline", "vertical", "repair")
 
-def build_eval_agent(*, vertical: bool) -> tuple[Context, Agent]:
+
+def build_eval_agent(*, variant: str) -> tuple[Context, Agent]:
+    """baseline 关闭知识库；vertical 只开审计；repair 额外开启并发修复。"""
     ctx = Context()
     ctx.plugin(
         headless_bundle,
@@ -135,10 +163,11 @@ def build_eval_agent(*, vertical: bool) -> tuple[Context, Agent]:
                     "kb_stale_days": 180,
                     "kb_root": ".",
                     "kb_watch_enabled": False,
+                    "kb_repair_enabled": variant == "repair",
                 }
             },
             enable_console_questions=False,
-            enable_knowledge_base=vertical,
+            enable_knowledge_base=variant != "baseline",
         ),
     )
     agent = ctx.require("agent")
@@ -147,7 +176,6 @@ def build_eval_agent(*, vertical: bool) -> tuple[Context, Agent]:
 
 
 def run_case(case: EvalCase, variant: str, trial: int) -> RunResult:
-    vertical = variant == "vertical"
     with tempfile.TemporaryDirectory(prefix=f"kb-eval-{case.id}-") as tmp:
         workspace = Path(tmp)
         for relative, content in case.files.items():
@@ -159,7 +187,7 @@ def run_case(case: EvalCase, variant: str, trial: int) -> RunResult:
         session_path: str | None = None
         try:
             os.chdir(workspace)
-            ctx, agent = build_eval_agent(vertical=vertical)
+            ctx, agent = build_eval_agent(variant=variant)
             agent.followup(case.task)
             session = agent.run(max_turns=10)
             completed = _completed(session.events)
@@ -244,7 +272,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trials", type=int, choices=(1, 3), default=1)
     parser.add_argument(
-        "--variant", choices=("baseline", "vertical", "both"), default="both"
+        "--variant", choices=(*VARIANTS, "both", "all"), default="both"
     )
     parser.add_argument("--case", choices=tuple(case.id for case in CASES))
     parser.add_argument("--list", action="store_true", help="只列出案例，不调用模型")
@@ -255,11 +283,12 @@ def main() -> None:
             print(f"{case.id}: {case.task}")
         return
 
-    variants = (
-        ("baseline", "vertical")
-        if arguments.variant == "both"
-        else (arguments.variant,)
-    )
+    if arguments.variant == "both":
+        variants: tuple[str, ...] = ("baseline", "vertical")
+    elif arguments.variant == "all":
+        variants = VARIANTS
+    else:
+        variants = (arguments.variant,)
     results: list[RunResult] = []
     for variant in variants:
         for case in selected:

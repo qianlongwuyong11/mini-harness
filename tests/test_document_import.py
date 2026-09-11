@@ -210,7 +210,7 @@ class DocumentImportPluginTests(unittest.TestCase):
                 self.assertIsInstance(agent, Agent)
                 self.assertIsInstance(tools, ToolRegistry)
                 self.assertIsInstance(prompt, PromptAssembler)
-                self.assertEqual(len(agent.tool_names), 27)
+                self.assertEqual(len(agent.tool_names), 28)
                 tool = tools.get("kb_import_document")
                 self.assertIsNotNone(tool)
                 assert tool is not None

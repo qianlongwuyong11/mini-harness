@@ -33,6 +33,7 @@ from .capabilities import (
 from .client import ChatClient, DeepSeekClient
 from .cordis import Context, depends
 from .document_import import document_import_consumer, document_import_provider
+from .kb_repair import kb_repair_consumer, kb_repair_provider
 from .knowledge_base import kb_consumer, kb_provider
 from .knowledge_watch import knowledge_watch_provider
 from .policies import (
@@ -138,6 +139,10 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
         ctx.plugin(document_import_provider)
         ctx.plugin(document_import_consumer)
         ctx.plugin(knowledge_watch_provider)
+        # kb_repair 依赖 workflow，而 workflow_provider 在分支之后挂载；
+        # Cordis 的 fiber 会在依赖就绪后自动加载，顺序不影响正确性。
+        ctx.plugin(kb_repair_provider)
+        ctx.plugin(kb_repair_consumer)
     ctx.plugin(shell_provider)
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)

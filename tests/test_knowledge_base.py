@@ -227,10 +227,11 @@ class KnowledgeBasePluginTests(unittest.TestCase):
                 prompt = ctx.require("prompt")
                 self.assertIsInstance(agent, Agent)
                 self.assertIsInstance(prompt, PromptAssembler)
-                self.assertEqual(len(agent.tool_names), 27)
+                self.assertEqual(len(agent.tool_names), 28)
                 self.assertIn("kb_audit", agent.tool_names)
                 self.assertIn("kb_search", agent.tool_names)
                 self.assertIn("kb_import_document", agent.tool_names)
+                self.assertIn("kb_repair", agent.tool_names)
                 self.assertIn(
                     "knowledge-base:governance",
                     {section.name for section in prompt.sections},
@@ -244,6 +245,7 @@ class KnowledgeBasePluginTests(unittest.TestCase):
                 self.assertNotIn("kb_audit", agent.tool_names)
                 self.assertNotIn("kb_search", agent.tool_names)
                 self.assertIn("kb_import_document", agent.tool_names)
+                self.assertIn("kb_repair", agent.tool_names)
                 self.assertNotIn(
                     "knowledge-base:governance",
                     {section.name for section in prompt.sections},
