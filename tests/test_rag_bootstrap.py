@@ -40,7 +40,7 @@ class RagBootstrapTests(unittest.TestCase):
             finally:
                 ctx.dispose()
 
-    def test_enabling_rag_installs_catalog_without_retrieval_tools(self) -> None:
+    def test_enabling_rag_installs_lazy_services_and_tools(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             previous = Path.cwd()
             ctx: Context | None = None
@@ -67,8 +67,12 @@ class RagBootstrapTests(unittest.TestCase):
                 )
                 self.assertEqual(rag.state, "active")
                 self.assertIn("paper_catalog", ctx.service_names)
-                self.assertTrue(Path(".mini-harness/rag/catalog.sqlite3").exists())
+                self.assertTrue(Path(".mini-harness/rag/vector-catalog.sqlite3").exists())
+                self.assertTrue({'list_papers','search_papers','read_section'} <= set(agent.tool_names))
+                self.assertIn('本轮证据', prompt.render({'name':'test'}))
                 rag.dispose()
+                self.assertFalse({'list_papers','search_papers','read_section'} & set(agent.tool_names))
+                self.assertNotIn('本轮证据', prompt.render({'name':'test'}))
                 self.assertNotIn("paper_catalog", ctx.service_names)
                 self.assertNotIn("paper_retrieval", ctx.service_names)
                 self.assertFalse(any(name.startswith("paper_") for name in agent.tool_names))

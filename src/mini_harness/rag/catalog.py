@@ -325,6 +325,17 @@ class SQLitePaperCatalog:
             self._put_job(db, job)
             return job
 
+    def cancel_job(self, job_id: str) -> IngestionJob:
+        """Invalidate a worker snapshot atomically; already published jobs stay ready."""
+        with self._connection(write=True) as db:
+            job = self._job(db, job_id)
+            if job is None or job.status is IngestionStatus.READY:
+                raise CatalogConflict("Missing job or already published")
+            job = replace(job, status=IngestionStatus.CANCELLED,
+                          lease_owner=None, lease_expires_at=None, updated_at=_now())
+            self._put_job(db, job)
+            return job
+
     def retry_job(self, job_id: str) -> IngestionJob:
         with self._connection(write=True) as db:
             job = self._job(db, job_id)

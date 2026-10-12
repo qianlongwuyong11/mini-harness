@@ -41,6 +41,7 @@ def build_agent(
     enable_console_questions: bool = True,
     checkpoint_flush: Callable[[Session], None] | None = None,
     session: Session | None = None,
+    rag_runtime=None,
 ) -> Agent:
     """创建 Context 并挂载 headless Bundle；能力由插件依赖自动接线。"""
     ctx = Context()
@@ -51,6 +52,8 @@ def build_agent(
             enable_console_questions=enable_console_questions,
             checkpoint_flush=checkpoint_flush,
             session=session,
+            enable_rag=rag_runtime is not None,
+            rag_runtime=rag_runtime,
         ),
     )
     return cast(Agent, ctx.require("agent"))

@@ -1,0 +1,17 @@
+{
+  "status": "ready",
+  "attempts": 1,
+  "source_blocks": 216,
+  "block_json_files": 216,
+  "indexed_chunks": 106,
+  "restart_query": "自注意力如何调整感受野？",
+  "evidence_count": 5,
+  "top_section": [
+    "4. Experiments",
+    "4.4. Ablation Studies"
+  ],
+  "duplicate_reused": true,
+  "catalog": "F:\\github\\mini-harness\\.mini-harness\\rag\\ingestion-smoke.sqlite3",
+  "block_directory": "F:\\github\\mini-harness\\.mini-harness\\rag\\ingestion-smoke.sqlite3.blocks",
+  "index": "mini-harness-papers-ingestion-step11"
+}

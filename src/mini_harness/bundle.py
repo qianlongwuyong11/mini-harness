@@ -58,7 +58,8 @@ class BundleConfig:
     session: Session | None = None
     enable_knowledge_base: bool = True
     enable_rag: bool = False
-    rag_catalog_path: str = ".mini-harness/rag/catalog.sqlite3"
+    rag_catalog_path: str = ".mini-harness/rag/vector-catalog.sqlite3"
+    rag_runtime: Any = None
 
 
 def session_provider(ctx: Context, session: Session | None) -> None:
@@ -150,7 +151,7 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
         # Elasticsearch、LlamaIndex 等依赖也不会影响普通 Agent 启动。
         from .rag.plugin import rag_plugin
 
-        ctx.plugin(rag_plugin, config.rag_catalog_path)
+        ctx.plugin(rag_plugin, config.rag_runtime or config.rag_catalog_path)
     ctx.plugin(shell_provider)
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)

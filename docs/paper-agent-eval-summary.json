@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "category": "method",
+      "tool_calls": [
+        "list_papers",
+        "search_papers",
+        "search_papers"
+      ],
+      "citation_count": 4,
+      "all_ids_present": true,
+      "has_page_locators": true
+    },
+    {
+      "category": "context",
+      "tool_calls": [
+        "list_papers",
+        "read_section",
+        "search_papers"
+      ],
+      "citation_count": 14,
+      "all_ids_present": true,
+      "has_page_locators": true
+    },
+    {
+      "category": "annotation",
+      "tool_calls": [
+        "list_papers",
+        "read_section"
+      ],
+      "citation_count": 8,
+      "all_ids_present": true,
+      "has_page_locators": true
+    },
+    {
+      "category": "unanswerable",
+      "tool_calls": [
+        "list_papers",
+        "search_papers",
+        "search_papers"
+      ],
+      "citation_count": 2,
+      "all_ids_present": true,
+      "has_page_locators": true
+    }
+  ],
+  "review": "Assistant compared answers with retrieved evidence; final human review remains open.",
+  "limitations": [
+    "Small development set only",
+    "Some figure/table section paths are inaccurate",
+    "Natural language support is not guaranteed by citation validation",
+    "No-answer replies may still overstate coverage of the retrieved excerpts"
+  ]
+}
