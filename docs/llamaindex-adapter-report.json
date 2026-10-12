@@ -1,0 +1,138 @@
+{
+  "index": "mini-harness-papers-dense-5a0b4797e75c38bd",
+  "queries": [
+    {
+      "id": "q1",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-d2e5360751b0b9cdefcd18e795751e73",
+        "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b",
+        "chunk-d7eb04ed71dd3740889339e70a2eb7ef",
+        "chunk-823257fdafe251bc9da80684510f28cc",
+        "chunk-d9f7544c5256e2756f78b72cc3d6bb18"
+      ]
+    },
+    {
+      "id": "q2",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-7878538fc74453c3c97fc90291c2366b",
+        "chunk-428f08580e2d4d268912ca629dbd94e1",
+        "chunk-3e928121a8e6ea033e8c78a28f6107fa",
+        "chunk-b792b75724cf4ca0e517da719be6c674",
+        "chunk-089860d3a036b00d6a6bac72df39bc21"
+      ]
+    },
+    {
+      "id": "q3",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-e67c03e8eed72ab9cf48b852cf70dd2b",
+        "chunk-3e928121a8e6ea033e8c78a28f6107fa",
+        "chunk-c3fa6525fa9deb6f11e54026f0e27d15",
+        "chunk-a4cf3997d24a7899e79d98ddd52af5b9",
+        "chunk-428f08580e2d4d268912ca629dbd94e1"
+      ]
+    },
+    {
+      "id": "q4",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-d60c904083eba81d3d4ff14108bb1256",
+        "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b",
+        "chunk-f69c21c657ef58c8950aa09ffe3389fd",
+        "chunk-8cb92927265525b02fc09bf726040676",
+        "chunk-efe4787d24ca45959f6254b088ec2d1d"
+      ]
+    },
+    {
+      "id": "q5",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-8cb92927265525b02fc09bf726040676",
+        "chunk-85267b6bbf4b540a7e2f9e52f88ca6a5",
+        "chunk-114284510e2b4ec3268842bc904150d4",
+        "chunk-0b3a4ec164b84dccedcb4f56f2214f4e",
+        "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b"
+      ]
+    },
+    {
+      "id": "q6",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-dfd13d8300c1d95feaf0defb702b08a3",
+        "chunk-fca6bcf25ea1d2ff38d110f4d8eae923",
+        "chunk-e846098e32f3b3253a802126652b5acc",
+        "chunk-20f503f25c6aef3c016b589f3ccf031d",
+        "chunk-08af9ecc0d9a5d563919f909ced6f853"
+      ]
+    },
+    {
+      "id": "q7",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-e846098e32f3b3253a802126652b5acc",
+        "chunk-2b99fa67fbffd89f266dc0d0d0a3274b",
+        "chunk-d725a8c4f9e032b0a7f1e23e97265e26",
+        "chunk-cc18414d9e889ab3c4b547f48edcaaa7",
+        "chunk-076b49e6cbc6bf3bbb57a5aff7704c1d"
+      ]
+    },
+    {
+      "id": "q8",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-1f6948d2a5924982069644560613b440",
+        "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b",
+        "chunk-8cb35b60a7fdcdb5476e579c2caf7415",
+        "chunk-f69c21c657ef58c8950aa09ffe3389fd",
+        "chunk-7d40271104f5fd5df4b396d162b91128"
+      ]
+    },
+    {
+      "id": "q9",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-015f2fa3ff27ec79d6b4b2dba20afd9d",
+        "chunk-a20451d8a07e03a32686d0e6146a1594",
+        "chunk-05c4648556e2de9be1ed8005b9aac80b",
+        "chunk-7878538fc74453c3c97fc90291c2366b",
+        "chunk-3e928121a8e6ea033e8c78a28f6107fa"
+      ]
+    },
+    {
+      "id": "q10",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-682134b09b338397b432ec01feecef81",
+        "chunk-b4604b9b59f96921a0d3f67f47651b88",
+        "chunk-7d40271104f5fd5df4b396d162b91128",
+        "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b",
+        "chunk-f69c21c657ef58c8950aa09ffe3389fd"
+      ]
+    },
+    {
+      "id": "q11",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-d2e5360751b0b9cdefcd18e795751e73",
+        "chunk-0939ec919a185739323bd4a7ad096dec",
+        "chunk-51cd52e6e1da9161e12446baa74d1c0a",
+        "chunk-d7eb04ed71dd3740889339e70a2eb7ef",
+        "chunk-e698908cee6ae2a4dd1532d19c62d840"
+      ]
+    },
+    {
+      "id": "q12",
+      "equal": true,
+      "chunk_ids": [
+        "chunk-200189ad16922d636cb8d3815223a9bb",
+        "chunk-114284510e2b4ec3268842bc904150d4",
+        "chunk-85267b6bbf4b540a7e2f9e52f88ca6a5",
+        "chunk-8cb92927265525b02fc09bf726040676",
+        "chunk-7d40271104f5fd5df4b396d162b91128"
+      ]
+    }
+  ],
+  "all_equal": true
+}
