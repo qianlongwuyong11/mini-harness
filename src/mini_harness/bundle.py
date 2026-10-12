@@ -57,6 +57,8 @@ class BundleConfig:
     client: ChatClient | None = None
     session: Session | None = None
     enable_knowledge_base: bool = True
+    enable_rag: bool = False
+    rag_catalog_path: str = ".mini-harness/rag/catalog.sqlite3"
 
 
 def session_provider(ctx: Context, session: Session | None) -> None:
@@ -143,6 +145,12 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
         # Cordis 的 fiber 会在依赖就绪后自动加载，顺序不影响正确性。
         ctx.plugin(kb_repair_provider)
         ctx.plugin(kb_repair_consumer)
+    if config.enable_rag:
+        # RAG 是可选能力：默认关闭时不导入其模块，后续引入 Docling、
+        # Elasticsearch、LlamaIndex 等依赖也不会影响普通 Agent 启动。
+        from .rag.plugin import rag_plugin
+
+        ctx.plugin(rag_plugin, config.rag_catalog_path)
     ctx.plugin(shell_provider)
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)

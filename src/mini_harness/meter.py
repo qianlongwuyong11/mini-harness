@@ -1,21 +1,26 @@
 """Token 计量：感知上下文压力（第 09 章首次实现）。
 
-对应官方 packages/llm/token-meter。官方用一个固定启发式估算 token：
-每 token 按 4 个字符计，外加角色与结构开销，
-不引入真实 tokenizer。教学版复刻同一思路。
+对应官方 packages/llm/token-meter。官方用「4 字符 ≈ 1 token」的启发式，
+这里改用 DeepSeek 官方离线分词器（API 文档提供的 deepseek_v4_tokenizer.zip
+中的 tokenizer.json），并按其 chat template 的角色标记拼接消息后计数。
+服务端对工具清单等字段的拼接方式未公开，计费仍以 API 返回的 usage 为准。
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
+
+from tokenizers import Tokenizer
 
 from .client import Message
 
-# 官方启发式：4 字符 ≈ 1 token
-CHARS_PER_TOKEN = 4
-# 每条消息的角色/结构开销（官方 estimateMessage = 内容估算 + 4）
-ROLE_OVERHEAD = 4
+TOKENIZER_FILE = (
+    Path(__file__).parent / "assets" / "deepseek_v4_tokenizer" / "tokenizer.json"
+)
 # DeepSeek 官方适配器默认上下文容量：1e6 token
 DEFAULT_CONTEXT_WINDOW = 1_000_000
 # 压力阈值：占用 >= 80% 触发（对齐官方压缩包 DEFAULT_THRESHOLD_RATIO=.8）
@@ -42,25 +47,50 @@ class Pressure:
     over_threshold: bool
 
 
+@lru_cache(maxsize=1)
+def _tokenizer() -> Tokenizer:
+    return Tokenizer.from_file(str(TOKENIZER_FILE))
+
+
 def estimate_tokens(text: str) -> int:
-    """纯函数：一段文本的估算 = ceil(字符数 / 4)。"""
-    return -(-len(text) // CHARS_PER_TOKEN)  # 向上取整的整除写法
+    """官方分词器对一段文本的 token 数；文本里的角色标记按词表识别为特殊 token。"""
+    if not text:
+        return 0
+    return len(_tokenizer().encode(text, add_special_tokens=False).ids)
+
+
+def render_message(message: Message) -> str:
+    """按官方 chat template 把一条消息渲染成模型实际看到的文本。
+    reasoning_content 会随请求回传（见 DeepSeekClient._wire_message），一并计入。"""
+    content = message.content or ""
+    if message.role == "user":
+        return "<｜User｜>" + content
+    if message.role == "tool":
+        return "<｜tool▁output▁begin｜>" + content + "<｜tool▁output▁end｜>"
+    if message.role == "assistant":
+        calls = "\n".join(
+            "<｜tool▁call▁begin｜>function<｜tool▁sep｜>"
+            f"{call.name}\n```json\n{call.arguments}\n```<｜tool▁call▁end｜>"
+            for call in message.tool_calls
+        )
+        if calls:
+            calls = "<｜tool▁calls▁begin｜>" + calls + "<｜tool▁calls▁end｜>"
+        reasoning = message.reasoning_content or ""
+        return "<｜Assistant｜>" + reasoning + content + calls + "<｜end▁of▁sentence｜>"
+    return content
 
 
 def estimate_message(message: Message) -> int:
-    """一条消息的估算 = 内容 + 角色开销。"""
-    content = message.content or ""
-    return estimate_tokens(content) + ROLE_OVERHEAD
+    """一条消息的 token 数 = 渲染后文本（内容 + 角色标记）的分词长度。"""
+    return estimate_tokens(render_message(message))
 
 
 def estimate_tools(tools: list[Any]) -> int:
-    """工具 schema 的结构开销：序列化后按启发式估算。
+    """工具 schema 序列化后的分词长度。
     工具清单每次请求都要随 system 一起发送，是实打实的输入成本。"""
-    import json
-
     if not tools:
         return 0
-    return estimate_tokens(json.dumps(tools, ensure_ascii=False)) + ROLE_OVERHEAD
+    return estimate_tokens(json.dumps(tools, ensure_ascii=False))
 
 
 class TokenMeter:
@@ -71,15 +101,18 @@ class TokenMeter:
 
     def measure(self, messages: list[Message], tools: list[Any] | None = None) -> Measurement:
         """计量一段会话：消息面 + 工具的 envelope。"""
+        encodings = _tokenizer().encode_batch(
+            [render_message(m) for m in messages], add_special_tokens=False
+        )
         metered = [
             {
                 "role": m.role,
                 "length": len(m.content or ""),
-                "tokens": estimate_message(m),
+                "tokens": len(encoding.ids),
             }
-            for m in messages
+            for m, encoding in zip(messages, encodings)
         ]
-        message_tokens = sum(estimate_message(message) for message in messages)
+        message_tokens = sum(item["tokens"] for item in metered)
         tools_tokens = estimate_tools(tools or [])
         return Measurement(
             messages=metered,

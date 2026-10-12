@@ -1,0 +1,22 @@
+{
+  "source_blocks": 216,
+  "chunks": 127,
+  "max_tokens": 382,
+  "chunker_version": "structure-v1-951ee8a59116a2a0",
+  "tokenizer": "intfloat/multilingual-e5-small:0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39:passage: ",
+  "version": {
+    "paper_id": "sparsebev-0ea0a21472845724",
+    "version": "531c10b5362c32281a016d75",
+    "source_hash": "0ea0a21472845724e88105f82ed0ffabfb239b29dd760711aea72147d2c94bd7",
+    "parser_version": "docling-2.137.0-adapter-v3-fcae78fce33e",
+    "chunker_version": "structure-v1-951ee8a59116a2a0",
+    "embedding_model": null,
+    "embedding_revision": null,
+    "state": "staging",
+    "chunk_count": 0,
+    "created_at": "2026-10-12T01:35:23.535402+00:00"
+  },
+  "artifacts": "F:\\github\\mini-harness\\.mini-harness\\rag\\chunk-eval\\531c10b5362c32281a016d75",
+  "repeatable": true,
+  "all_blocks_covered": true
+}

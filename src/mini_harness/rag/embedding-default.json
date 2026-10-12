@@ -1,0 +1,9 @@
+{
+  "model_id": "intfloat/multilingual-e5-base",
+  "revision": "d128750597153bb5987e10b1c3493a34e5a4502a",
+  "dimensions": 768,
+  "max_tokens": 512,
+  "batch_size": 4,
+  "device": "cpu",
+  "num_threads": 4
+}

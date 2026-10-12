@@ -1,0 +1,241 @@
+{
+  "engine": "small",
+  "corpus_sha256": "1081719ba289f167679af8ceefbc49d928a5a4f94908c6fd5a705c62be7c7dc2",
+  "queries_sha256": "c9ab77345684ccf46517c790c1796cdedfa46d35bc4c0654aae90157fcb8292a",
+  "corpus_chunks": 106,
+  "questions": 12,
+  "limitations": "Single paper, 12 manually curated questions; provisional relevance labels, not a held-out benchmark",
+  "fresh_process_load_seconds_cached_weights": 13.12208659999942,
+  "document_encoding_seconds": 7.835242399999515,
+  "document_vectors_per_second": 13.52861782553231,
+  "norm_range": [
+    0.9999998807907104,
+    1.0000001192092896
+  ],
+  "first_query_encoding_ms": 15.030399999886868,
+  "exact_vector_search_ms_median": 0.04724999962490983,
+  "embedding": {
+    "model_id": "intfloat/multilingual-e5-small",
+    "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "dimensions": 384,
+    "max_tokens": 512,
+    "batch_size": 4,
+    "device": "cpu",
+    "num_threads": 4,
+    "effective_device": "cpu",
+    "fallback_reason": null,
+    "tokenizer_sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+    "pooling": "attention-mask mean",
+    "normalize": "L2",
+    "dtype": "float32",
+    "document_prefix": "passage: ",
+    "query_prefix": "query: "
+  },
+  "artifact": "F:\\github\\mini-harness\\.mini-harness\\rag\\embedding-eval\\small",
+  "quality": {
+    "recall@1": 0.041666666666666664,
+    "hit@1": 0.08333333333333333,
+    "recall@3": 0.3194444444444444,
+    "hit@3": 0.4166666666666667,
+    "recall@5": 0.3194444444444444,
+    "hit@5": 0.4166666666666667
+  },
+  "pure_chinese_quality": {
+    "recall@1": 0.0,
+    "hit@1": 0.0,
+    "recall@3": 0.2916666666666667,
+    "hit@3": 0.375,
+    "recall@5": 0.2916666666666667,
+    "hit@5": 0.375
+  },
+  "mixed_query_quality": {
+    "recall@1": 0.125,
+    "hit@1": 0.25,
+    "recall@3": 0.375,
+    "hit@3": 0.5,
+    "recall@5": 0.375,
+    "hit@5": 0.5
+  },
+  "query_ms_median": 13.730349999605096,
+  "query_ms_p95": 16.15270000002056,
+  "rankings": [
+    {
+      "id": "q1",
+      "query": "查询向量包含哪些几何属性和运动属性？",
+      "relevant_ordinals": [
+        21
+      ],
+      "retrieved_ordinals": [
+        1,
+        10,
+        48,
+        20,
+        38
+      ]
+    },
+    {
+      "id": "q2",
+      "query": "自注意力如何用距离和系数调整每个查询的感受野？",
+      "relevant_ordinals": [
+        25
+      ],
+      "retrieved_ordinals": [
+        22,
+        98,
+        27,
+        10,
+        20
+      ]
+    },
+    {
+      "id": "q3",
+      "query": "为什么不同类别的物体需要不同大小的感受野？",
+      "relevant_ordinals": [
+        26,
+        59
+      ],
+      "retrieved_ordinals": [
+        22,
+        38,
+        27,
+        12,
+        98
+      ]
+    },
+    {
+      "id": "q4",
+      "query": "如何根据物体速度对齐历史帧的采样位置？",
+      "relevant_ordinals": [
+        28,
+        29,
+        66
+      ],
+      "retrieved_ordinals": [
+        27,
+        29,
+        38,
+        12,
+        87
+      ]
+    },
+    {
+      "id": "q5",
+      "query": "采样之后，如何在查询的引导下混合通道和空间点特征？",
+      "relevant_ordinals": [
+        37
+      ],
+      "retrieved_ordinals": [
+        27,
+        37,
+        10,
+        38,
+        25
+      ]
+    },
+    {
+      "id": "q6",
+      "query": "双分支模型的慢速流与快速流分别有什么作用？",
+      "relevant_ordinals": [
+        39
+      ],
+      "retrieved_ordinals": [
+        38,
+        87,
+        39,
+        72,
+        27
+      ]
+    },
+    {
+      "id": "q7",
+      "query": "增加视频帧数和每帧采样点数会对效果有什么影响？",
+      "relevant_ordinals": [
+        61,
+        62
+      ],
+      "retrieved_ordinals": [
+        38,
+        88,
+        0,
+        22,
+        84
+      ]
+    },
+    {
+      "id": "q8",
+      "query": "这个方法依赖自车位姿带来了什么局限？",
+      "relevant_ordinals": [
+        68
+      ],
+      "retrieved_ordinals": [
+        22,
+        38,
+        98,
+        27,
+        87
+      ]
+    },
+    {
+      "id": "q9",
+      "query": "Table 4 SASA 与普通 MHSA 的消融实验比较",
+      "relevant_ordinals": [
+        55,
+        59
+      ],
+      "retrieved_ordinals": [
+        55,
+        56,
+        59,
+        57,
+        38
+      ]
+    },
+    {
+      "id": "q10",
+      "query": "Table 5 ego motion 和 object motion 对齐效果",
+      "relevant_ordinals": [
+        64,
+        66
+      ],
+      "retrieved_ordinals": [
+        65,
+        64,
+        22,
+        12,
+        14
+      ]
+    },
+    {
+      "id": "q11",
+      "query": "SparseBEV Query Formulation 初始化的柱状查询",
+      "relevant_ordinals": [
+        21
+      ],
+      "retrieved_ordinals": [
+        38,
+        87,
+        18,
+        72,
+        20
+      ]
+    },
+    {
+      "id": "q12",
+      "query": "Adaptive Mixing channel mixing point mixing 顺序",
+      "relevant_ordinals": [
+        37,
+        66,
+        69
+      ],
+      "retrieved_ordinals": [
+        36,
+        27,
+        38,
+        22,
+        70
+      ]
+    }
+  ],
+  "process_peak_rss_mib": 1186.375,
+  "process_baseline_rss_mib": 22.72265625
+}

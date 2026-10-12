@@ -1,0 +1,14 @@
+[
+  {"id":"q1","query":"查询向量包含哪些几何属性和运动属性？","relevant_ordinals":[21]},
+  {"id":"q2","query":"自注意力如何用距离和系数调整每个查询的感受野？","relevant_ordinals":[25]},
+  {"id":"q3","query":"为什么不同类别的物体需要不同大小的感受野？","relevant_ordinals":[26,59]},
+  {"id":"q4","query":"如何根据物体速度对齐历史帧的采样位置？","relevant_ordinals":[28,29,66]},
+  {"id":"q5","query":"采样之后，如何在查询的引导下混合通道和空间点特征？","relevant_ordinals":[37]},
+  {"id":"q6","query":"双分支模型的慢速流与快速流分别有什么作用？","relevant_ordinals":[39]},
+  {"id":"q7","query":"增加视频帧数和每帧采样点数会对效果有什么影响？","relevant_ordinals":[61,62]},
+  {"id":"q8","query":"这个方法依赖自车位姿带来了什么局限？","relevant_ordinals":[68]},
+  {"id":"q9","query":"Table 4 SASA 与普通 MHSA 的消融实验比较","relevant_ordinals":[55,59]},
+  {"id":"q10","query":"Table 5 ego motion 和 object motion 对齐效果","relevant_ordinals":[64,66]},
+  {"id":"q11","query":"SparseBEV Query Formulation 初始化的柱状查询","relevant_ordinals":[21]},
+  {"id":"q12","query":"Adaptive Mixing channel mixing point mixing 顺序","relevant_ordinals":[37,66,69]}
+]

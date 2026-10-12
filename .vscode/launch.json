@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Session load, reply, and persist",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/debug_session_resume.py",
+      "args": [
+        "${input:sessionFile}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Debug KB repair ChangeSet",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "mini_harness",
+      "args": [
+        "请调用 kb_repair 修复 broken_link，dry_run=true，并返回修复预览"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ],
+  "inputs": [
+    {
+      "id": "sessionFile",
+      "type": "promptString",
+      "description": "Session JSONL path",
+      "default": ".mini-harness/sessions/<id>.jsonl"
+    }
+  ]
+}

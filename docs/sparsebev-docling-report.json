@@ -1,0 +1,403 @@
+{
+  "sample": "C:\\Users\\yjq\\Desktop\\Perception\\SparseBEV.pdf",
+  "source_sha256": "0ea0a21472845724e88105f82ed0ffabfb239b29dd760711aea72147d2c94bd7",
+  "docling_version": "2.137.0",
+  "wall_seconds": 57.267,
+  "baseline_rss_mib": 35.77,
+  "peak_process_tree_rss_mib": 1824.42,
+  "peak_increment_mib": 1788.65,
+  "paper_blocks": 195,
+  "annotation_blocks": 21,
+  "pypdf_baseline": {
+    "seconds": 1.784,
+    "page_blocks": 14,
+    "characters": 54058,
+    "limitation": "Layout unverified: headings, columns, tables, formulas and figures are not structurally parsed. Do not treat these blocks as complex-layout evidence."
+  },
+  "annotation_summary": [
+    {
+      "page": 3,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 3,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 3,
+      "subtype": "FreeText",
+      "text": "普通的多头自注意力机制的缺陷：有全局感受野但是局部感受野不强。因此后续的设计添加了Distance这个参数，见下面（2）式",
+      "bbox_count": 1
+    },
+    {
+      "page": 3,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "相似性",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "距离越远，整体的\n相似性参数会越低",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "t 的生成只是经过\n了一个线性层的变换",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "物体的移动跟速度相关，\n以此来解决车辆的移动",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "3.1 query formulation",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "本身有高度等等特征才能经过线性层的自适应",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "Ink",
+      "text": "PDF Ink annotation (no semantic text)",
+      "bbox_count": 1
+    },
+    {
+      "page": 4,
+      "subtype": "FreeText",
+      "text": "（1）适应查询特征（经过linear线性层）和查询柱（有坐标变换，式（4））的一种采样\n（2）得到的采样点先经过车间变换（Dealing with Object Motion），在经过自车变换（Dealing with Ego Motion），最终变换到最终坐标系\n（3）特征图上面取值",
+      "bbox_count": 1
+    }
+  ],
+  "section_3_2_found": true,
+  "section_3_2_neighborhood": [
+    {
+      "kind": "heading",
+      "pages": [
+        [
+          3,
+          3
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "3.2. Scale-adaptive Self Attention",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          3,
+          3
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "As mentioned above, dense BEV-based methods typically use a BEV encoder to encode multi-scale BEV features. However, in our method, since we do not explicitly build a BEV feature, how to aggregate multi-scale features in BEV space is a challenge.",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          3,
+          3
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "In this work, we argue that the self attention can play the role of BEV encoder, since queries are defined in BEV space. The vanilla multi-head self attention has global receptive field and lacks the ability of local multi-scale aggregation. Thus, we propose scale-adaptive self attention (SASA), which learns appropriate receptive fields under the guidance of queries. First, we compute the all-pair distances D ∈ RN×N (N is the number of queries) between the query centers in BEV space:",
+      "warnings": []
+    },
+    {
+      "kind": "formula",
+      "pages": [
+        [
+          3,
+          3
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "Di,j = √(xi - xj )2 + (yi - yj )2 , (1)",
+      "warnings": [
+        "Formula transcription is unverified; inspect original PDF for exact mathematics"
+      ]
+    },
+    {
+      "kind": "figure_caption",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "Figure 3: Visualization of the learned BEV receptive field in SASA. We choose two samples from the validation split and visualize 4 heads for each sample, denoted by τ1, τ2, τ3 and τ4. Queries are represented by their centers.",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "where xi and yi denotes the center of the i-th query. The attention considers not only the similarity between query features, but the distance between them as well. A toy example below shows how it works:",
+      "warnings": []
+    },
+    {
+      "kind": "formula",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "Attn(Q, K, V ) = Softmax( QKT √d - τD)V, (2)",
+      "warnings": [
+        "Formula transcription is unverified; inspect original PDF for exact mathematics"
+      ]
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "where Q,K, V ∈ RN×d is the query itself and d is the channel dimension. τ is a scalar to control the receptive field for each query. When τ = 0, it degrades to the vanilla self attention with global receptive field. As τ grows, the attention weights for distant queries becomes smaller and the receptive field narrows.",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "In practice, the receptive field controller τ is adaptive to each query and specific to each head. Supposing there are H heads, we use a linear transformation to generate headspecific τ1, τ2, ..., τH from the give query q ∈ Rd :",
+      "warnings": []
+    },
+    {
+      "kind": "formula",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "[τ1, τ2, ..., τH] = Lineard→H(q) ∈ RH , (3)",
+      "warnings": [
+        "Formula transcription is unverified; inspect original PDF for exact mathematics"
+      ]
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "where the weights are shared across different queries.",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "In our experiments, we surprisingly find that the τ for each head is learnt to uniformly distribute in a certain range regardless of the initialization. In Fig. 3, we sort the heads according to τ and visualize the attention weights for the distance part. As we can see, each head learns a different receptive field from each other, enabling the network to aggregate features in a multi-scale manner like FPN.",
+      "warnings": []
+    },
+    {
+      "kind": "text",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.2. Scale-adaptive Self Attention"
+      ],
+      "text": "Scale-adaptive self attention (SASA) demonstrates the necessity of FPN, while being more flexible as it learns the scales adaptively from the query. We also find an interesting phenomenon that different categories of queries have different sizes of receptive field. For example, queries representing the bus have larger receptive field than those representing the pedestrians. More details can be found in the ablation studies.",
+      "warnings": []
+    },
+    {
+      "kind": "heading",
+      "pages": [
+        [
+          4,
+          4
+        ]
+      ],
+      "section_path": [
+        "3. SparseBEV",
+        "3.3. Adaptive Spatio-temporal Sampling"
+      ],
+      "text": "3.3. Adaptive Spatio-temporal Sampling",
+      "warnings": []
+    }
+  ],
+  "artifact_directory": "F:\\github\\mini-harness\\.mini-harness\\rag\\parse-eval\\1f75ba27b113731af6a73f52",
+  "artifact_sizes_bytes": {
+    "source.pdf": 4080492,
+    "docling.json": 977564,
+    "document.md": 55072,
+    "source-blocks.json": 221754,
+    "parse-report.json": 767
+  },
+  "rendered_pages": [
+    "F:\\github\\mini-harness\\.mini-harness\\rag\\parse-eval\\rendered\\page-3.png",
+    "F:\\github\\mini-harness\\.mini-harness\\rag\\parse-eval\\rendered\\page-4.png",
+    "F:\\github\\mini-harness\\.mini-harness\\rag\\parse-eval\\rendered\\page-6.png",
+    "F:\\github\\mini-harness\\.mini-harness\\rag\\parse-eval\\rendered\\page-7.png"
+  ],
+  "parse_report": {
+    "parser_version": "docling-2.137.0-adapter-v3-fcae78fce33e",
+    "bbox_convention": "PDF_POINTS: bottom-left origin; y increases upward",
+    "annotation_isolation": "All annotation objects removed from temporary parser input; original preserved",
+    "source_sha256": "0ea0a21472845724e88105f82ed0ffabfb239b29dd760711aea72147d2c94bd7",
+    "docling_status": "success",
+    "docling_errors": [],
+    "config": {
+      "device": "cpu",
+      "num_threads": 4,
+      "do_ocr": false,
+      "do_table_structure": true,
+      "do_formula_enrichment": false
+    },
+    "paper_block_count": 195,
+    "annotation_block_count": 21,
+    "kind_counts": {
+      "heading": 24,
+      "text": 130,
+      "figure_caption": 20,
+      "formula": 12,
+      "table": 9
+    },
+    "skipped_textual_items_without_location": 0
+  }
+}

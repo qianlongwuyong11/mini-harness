@@ -1,0 +1,220 @@
+{
+  "fixture_type": "hand-written synthetic snippets; not PDF extraction or quality benchmark",
+  "es_version": "9.5.3",
+  "analyzers": {
+    "standard": {
+      "tokens": {
+        "SparseBEV": [
+          "sparsebev"
+        ],
+        "nuScenes": [
+          "nuscenes"
+        ],
+        "scale-adaptive self attention": [
+          "scale",
+          "adaptive",
+          "self",
+          "attention"
+        ],
+        "multi-camera": [
+          "multi",
+          "camera"
+        ],
+        "detection": [
+          "detection"
+        ]
+      },
+      "top_k": {
+        "SparseBEV": [
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 1.4056557,
+            "rank": 1
+          }
+        ],
+        "nuScenes": [
+          {
+            "section": [
+              "Experiments"
+            ],
+            "score": 1.4056557,
+            "rank": 1
+          }
+        ],
+        "scale-adaptive self attention": [
+          {
+            "section": [
+              "Scale-adaptive Self Attention"
+            ],
+            "score": 7.345419,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Sampling"
+            ],
+            "score": 0.99350965,
+            "rank": 2
+          }
+        ],
+        "multi-camera": [
+          {
+            "section": [
+              "Terminology"
+            ],
+            "score": 1.6959996,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 1.6959996,
+            "rank": 2
+          }
+        ],
+        "detection": [
+          {
+            "section": [
+              "Terminology"
+            ],
+            "score": 0.499125,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Experiments"
+            ],
+            "score": 0.499125,
+            "rank": 2
+          },
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 0.499125,
+            "rank": 3
+          }
+        ]
+      },
+      "checks": [
+        "retry_idempotency",
+        "staging_hidden",
+        "paper_scope",
+        "activation_switch",
+        "old_version_cleanup",
+        "annotation_isolation",
+        "soft_delete"
+      ]
+    },
+    "english": {
+      "tokens": {
+        "SparseBEV": [
+          "sparsebev"
+        ],
+        "nuScenes": [
+          "nuscen"
+        ],
+        "scale-adaptive self attention": [
+          "scale",
+          "adapt",
+          "self",
+          "attent"
+        ],
+        "multi-camera": [
+          "multi",
+          "camera"
+        ],
+        "detection": [
+          "detect"
+        ]
+      },
+      "top_k": {
+        "SparseBEV": [
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 1.4539398,
+            "rank": 1
+          }
+        ],
+        "nuScenes": [
+          {
+            "section": [
+              "Experiments"
+            ],
+            "score": 1.5251338,
+            "rank": 1
+          }
+        ],
+        "scale-adaptive self attention": [
+          {
+            "section": [
+              "Scale-adaptive Self Attention"
+            ],
+            "score": 7.345419,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Sampling"
+            ],
+            "score": 0.9674505,
+            "rank": 2
+          }
+        ],
+        "multi-camera": [
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 1.7542567,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Terminology"
+            ],
+            "score": 1.6760194,
+            "rank": 2
+          }
+        ],
+        "detection": [
+          {
+            "section": [
+              "Terminology"
+            ],
+            "score": 0.6917083,
+            "rank": 1
+          },
+          {
+            "section": [
+              "Experiments"
+            ],
+            "score": 0.5415496,
+            "rank": 2
+          },
+          {
+            "section": [
+              "Overview"
+            ],
+            "score": 0.51626986,
+            "rank": 3
+          }
+        ]
+      },
+      "checks": [
+        "retry_idempotency",
+        "staging_hidden",
+        "paper_scope",
+        "activation_switch",
+        "old_version_cleanup",
+        "annotation_isolation",
+        "soft_delete"
+      ]
+    }
+  }
+}

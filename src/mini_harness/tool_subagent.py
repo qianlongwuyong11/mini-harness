@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Mapping, Sequence
 
 from .client import ChatClient, Message, Tool, ToolCall
@@ -55,6 +56,7 @@ def run_tool_subagent(
                 ],
                 list(tools),
             )
+            print(f"[kb-repair-subagent:model] {reply!r}", file=sys.stderr, flush=True)
             if _interrupted(cancelled):
                 return _settle(session, partial, "interrupted")
             session.append(

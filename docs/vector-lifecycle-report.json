@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "idempotent_retry",
+    "staging_hidden",
+    "annotation_prefilter",
+    "paper_prefilter",
+    "actual_http200_partial_bulk_error",
+    "partial_staging_does_not_replace_active",
+    "repair_retry_and_version_switch",
+    "existing_index_model_mismatch_rejected",
+    "deleted_paper_hidden"
+  ],
+  "passed": true
+}
