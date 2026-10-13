@@ -82,7 +82,13 @@ class Agent:
         session: Session | None = None,
         session_id: str | None = None,
         trace_store: TraceStore | None = None,
+        max_steps_per_turn: int = 10,
+        trace_identity: dict[str, str] | None = None,
     ) -> None:
+        if not 1 <= max_steps_per_turn <= 100:
+            raise ValueError("max_steps_per_turn must be between 1 and 100")
+        self._max_steps_per_turn = max_steps_per_turn
+        self._evaluation_identity = dict(trace_identity or {})
         self._trace_store = trace_store or TraceStore(secrets=(getattr(client,"api_key",None),))
         self._last_model_request_id = None
         self._ctx = ctx
@@ -147,7 +153,7 @@ class Agent:
         return self._session
 
     def _run_turn(self, claimed: list[Message]) -> None:
-        for step in range(1, 11):
+        for step in range(1, self._max_steps_per_turn + 1):
             if step > 1:
                 claimed = self._inbox.claim_step()
 
@@ -195,7 +201,7 @@ class Agent:
 
             if completed and not self._inbox.has_next_step:
                 return
-        raise RuntimeError(f"第 {self._turn_no} 轮超过 10 个 step 仍未结束")
+        raise RuntimeError(f"第 {self._turn_no} 轮超过 {self._max_steps_per_turn} 个 step 仍未结束")
 
     def _assemble_request(self, step: int) -> ModelRequest:
         system_prompt = self._assembler.render(self._variables)
@@ -236,7 +242,7 @@ class Agent:
         self._request_header = fingerprint
 
     def _trace_identity(self):
-        return dict(session_id=self.session_id, agent_id=self.id,
+        return dict(**self._evaluation_identity, session_id=self.session_id, agent_id=self.id,
             turn_event_id=getattr(self,'_turn_event_id',None),
             step_event_id=getattr(self,'_step_event_id',None))
 

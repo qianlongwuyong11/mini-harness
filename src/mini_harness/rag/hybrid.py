@@ -131,5 +131,8 @@ class HybridSearchService:
         trace['bm25_candidates']=[h.to_dict() for h in lexical]
         trace['vector_candidates']=[h.to_dict() for h in vector]
         trace['fusion']=[dict(chunk_id=r['chunk'].chunk_id,**{k:v for k,v in r.items() if k!='chunk'}) for r in fused]
+        trace['returned_chunk_ids']=[e.chunk_id for e in evidence]
+        trace['top_k']=query.top_k
+        trace['score_semantics']=dict(bm25='ES BM25 _score',vector='ES dense_vector dot_product _score; not a probability',fusion='weighted RRF; not a probability',reranker=None)
         trace['total_ms']=(perf_counter()-started)*1000
         return SearchResult(query,tuple(evidence),RetrievalMode.HYBRID,len(fused)),trace

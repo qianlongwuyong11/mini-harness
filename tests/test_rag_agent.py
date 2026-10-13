@@ -163,3 +163,41 @@ class PaperAgentTests(unittest.TestCase):
             with self.assertRaises(ValueError):tools.get('read_section').execute({'paper_id':'p','version':'v','section_path':['Method']})
             self.assertEqual(json.loads(tools.get('list_papers').execute({})),[])
         finally:ctx.dispose()
+
+    def test_stage2_decision_reasons_are_distinct(self):
+        ledger=EvidenceLedger(self.runtime,256)
+        ledger.add((self.e,self.e,replace(self.e,excerpt='large '*3000)))
+        self.assertEqual([d['reason'] for d in ledger.last_decisions],['accepted','duplicate','budget'])
+        self.assertEqual(ledger.last_decisions[0]['evidence_id'],next(iter(ledger.items)))
+
+    def test_stage2_section_to_context_to_citation(self):
+        from mini_harness.evaluation.trace import TraceStore
+        from mini_harness.telemetry import step_metrics
+        ctx=Context()
+        class Client:
+            MODEL='fixture'
+            def __init__(inner):inner.count=0
+            def chat(inner,messages,tools):
+                inner.count+=1
+                if inner.count==1:
+                    return Message('assistant',tool_calls=(ToolCall('section-call','read_section',json.dumps(dict(paper_id='p',version='v',section_path=['Method']))),))
+                evidence=json.loads(messages[-1].content.split('\n',1)[1])
+                return Message('assistant','Answer [cite:'+evidence[0]['evidence_id']+']')
+        ctx.plugin(headless_bundle,BundleConfig(settings_document={},client=Client(),enable_rag=True,rag_runtime=self.runtime,enable_knowledge_base=False))
+        agent=ctx.require('agent');root=Path(self.tmp.name)/'trace';agent._trace_store=TraceStore(root)
+        try:
+            agent.followup('Read method');agent.run()
+            events=agent.session.events
+            section=next(e.data for e in events if e.type=='rag/section')
+            flow=next(e.data for e in events if e.type=='rag/evidence-flow')
+            injected=next(e.data for e in events if e.type=='rag/context')
+            cited=next(e.data for e in events if e.type=='rag/citations')
+            self.assertEqual(section['call_id'],'section-call')
+            self.assertEqual(section['read_count'],1)
+            self.assertEqual(section['score_semantics'],'not_applicable')
+            decisions=json.loads((root/flow['detail_ref']['relative_path']).read_text(encoding='utf-8'))['decisions']
+            self.assertEqual(decisions[0]['evidence_id'],injected['evidence_ids'][0])
+            self.assertEqual(list(cited['ids']),list(injected['evidence_ids']))
+            self.assertEqual(cited['model_request_id'],injected['model_request_id'])
+            self.assertEqual(len(step_metrics(events)[0]['rag_details']),2)
+        finally:ctx.dispose()

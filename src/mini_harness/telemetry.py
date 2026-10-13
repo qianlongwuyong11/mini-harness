@@ -3,19 +3,36 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 import time
 
+_artifact_store = ContextVar('metric_artifact_store',default=None)
+
 _sink = ContextVar('mini_harness_metric_sink',default=None)
 
 @contextmanager
-def metric_scope(session, **identity):
+def metric_scope(session, trace_store=None, **identity):
     token=_sink.set((session, identity))
+    artifact_token=_artifact_store.set(trace_store)
     try: yield
-    finally: _sink.reset(token)
+    finally:
+        _sink.reset(token)
+        _artifact_store.reset(artifact_token)
 
 def record_metric(kind,data):
     sink=_sink.get()
     if sink is not None:
         session, identity = sink
         session.append(kind, {**data, **identity})
+
+
+def record_detail(kind, content, **summary):
+    """Large RAG detail stays in the local artifact store, not numeric JSONL."""
+    store=_artifact_store.get()
+    ref=None
+    error=None
+    if store is not None:
+        try: ref=store.put(content)
+        except Exception as exc: error=type(exc).__name__
+    record_metric(kind,dict(**summary,detail_ref=ref,
+        detail_status='stored' if ref else 'error' if error else 'unavailable',detail_error=error))
 
 
 def turn_metrics(events):
@@ -97,7 +114,7 @@ def step_metrics(events):
             current = dict(id=event.id, turn_id=turn_id, turn_number=turn_number,
                 number=data.get('step', 1), started_at=event.ts, end_event_id=event.id,
                 status='running', outcome='running', instrumented=instrumented,
-                model_calls=[], tools=[], rag=[], runtime=[], evidence=[],
+                model_calls=[], tools=[], rag=[], runtime=[], evidence=[], rag_details=[],
                 citation_repairs=0, retries=0, retry_wait_ms=0, citation_count=0,
                 tool_calls=[], error_type=None, timing_source='event_timestamps')
             rows.append(current)
@@ -130,11 +147,15 @@ def step_metrics(events):
             current['tools'].append(dict(data))
             call = calls.get(data.get('call_id'))
             if call is not None:
-                call.update(status=data['status'], elapsed_ms=data['elapsed_ms'], error_type=data.get('error_type'))
+                call.update(status=data['status'], elapsed_ms=data['elapsed_ms'], error_type=data.get('error_type'),error_code=data.get('error_code'),
+                    model_request_id=data.get('model_request_id'),input_ref=data.get('input_ref'),
+                    output_ref=data.get('output_ref'),raw_output_ref=data.get('raw_output_ref'))
             active_call = None
         elif kind in ('rag/trace', 'rag/runtime', 'rag/evidence'):
             target = {'rag/trace':'rag','rag/runtime':'runtime','rag/evidence':'evidence'}[kind]
             current[target].append({**data, 'call_id': data.get('call_id', active_call)})
+        elif kind in ('rag/retrieval','rag/section','rag/evidence-flow','rag/context'):
+            current['rag_details'].append(dict(event_type=kind,**data))
         elif kind == 'rag/repair':
             current['citation_repairs'] += 1
         elif kind == 'rag/citations':

@@ -20,6 +20,7 @@ class EvidenceLedger:
         self.items = {}
         self.used = False
         self._seen = set()
+        self.last_decisions = []
 
     def payload(self):
         return json.dumps([e.to_dict() for e in self.items.values()],ensure_ascii=False)
@@ -27,24 +28,37 @@ class EvidenceLedger:
     def add(self, evidence):
         self.used = True
         accepted = []
+        self.last_decisions = []
         for original in evidence:
-            self.runtime.validate(original)
+            decision=dict(chunk_id=original.chunk_id,paper_id=original.paper_id,version=original.version,
+                source_kind=original.source_kind.value,section_path=list(original.section_path),
+                page_spans=[dict(start=p.start,end=p.end) for p in original.page_spans])
+            self.last_decisions.append(decision)
+            try:
+                self.runtime.validate(original)
+            except Exception:
+                decision['reason']='invalid_evidence'
+                raise
             key = (original.paper_id,original.version,original.source_kind,original.excerpt,
                    original.section_path,original.page_spans)
             if key in self._seen:
+                decision['reason']='duplicate'
                 continue
             # Avoid wholly repeated adjacent excerpts without discarding independent passages.
             if any(original.paper_id == e.paper_id and original.version == e.version
                    and original.source_kind == e.source_kind and original.section_path == e.section_path
                    and original.page_spans == e.page_spans and original.excerpt in e.excerpt
                    for e in self.items.values()):
+                decision['reason']='covered'
                 continue
             identity = secrets.token_hex(16)
             candidate = replace(original,evidence_id=identity)
             # Keep whole excerpts: never silently cut a table/formula to meet the budget.
             packed = json.dumps([e.to_dict() for e in (*self.items.values(),candidate)],ensure_ascii=False)
             if estimate_tokens(packed) > self.budget:
+                decision['reason']='budget'
                 continue
+            decision.update(reason='accepted',evidence_id=identity)
             self.items[identity] = candidate
             self._seen.add(key)
             accepted.append(candidate)

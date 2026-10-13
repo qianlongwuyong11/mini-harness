@@ -80,6 +80,11 @@ def _catalog():
         add(key,label,"step","ratio","observe",("evidence_flow","budget"),"telemetry","明确分母，分母为零时不适用")
     for key,label in (("bm25_score","BM25 分数"),("vector_score","向量分数"),("rrf_score","RRF 分数"),("rerank_score","重排分数")):
         add(key,label,"rag","score","observe",("candidate_scores",),"retriever","不是概率；未启用该通道时不适用")
+    add("tool_constraints_satisfied", "工具名称约束满足", "case", "ratio", "higher", ("trace", "tool_constraints"), "rules", "必需工具均调用且禁用工具未调用；不判断语义", threshold=1, implementation="implemented")
+    add("tool_recoveries", "工具错误后成功次数", "case", "count", "observe", ("trace",), "rules", "同轮同名工具由失败转为成功；不等于任务恢复", implementation="implemented")
+    from dataclasses import replace
+    implemented = {"scope_violations", "invalid_citations", "citation_validity", "case_gold_coverage", "injected_gold_coverage"}
+    rows = [replace(row, implementation="implemented") if row.metric_id in implemented else row for row in rows]
     return MappingProxyType({r.metric_id:r for r in rows})
 
 METRICS = _catalog()

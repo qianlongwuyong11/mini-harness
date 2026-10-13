@@ -11,7 +11,7 @@ from llama_index.core.schema import NodeWithScore, QueryBundle, TextNode
 from pydantic import PrivateAttr
 
 from ..interfaces import EmbeddingService
-from ...telemetry import record_metric
+from ...telemetry import record_metric, record_detail
 from .tracing import LocalTraceHandler
 from ..models import (
     BoundingBox, Chunk, CoordinateSpace, Evidence, PageSpan, SearchQuery,
@@ -98,6 +98,8 @@ class LlamaIndexSearchAdapter:
             status='ok'
             return result
         finally:
+            record_detail('rag/retrieval',backend_trace,trace_id=handler.trace_id,status=status,
+                score_semantics='retrieval_scores_not_probabilities',reranker_enabled=False)
             record_metric('rag/trace',dict(trace_id=handler.trace_id,engine='llamaindex_callbacks',
                 status=status,top_k=query.top_k,spans=handler.spans,
                 candidate_count=results[0].candidate_count if results else None,

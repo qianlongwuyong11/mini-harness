@@ -1,6 +1,6 @@
 # mini-harness Agent 端到端评测改造计划
 
-日期：2026-10-13。状态：阶段 0–1 已完成，阶段 2–8 待实施。DeepEval 已在隔离环境验证；尚未接入真实评测运行器或上线评测页面。
+日期：2026-10-13。状态：阶段 0–4 已完成，阶段 5–8 待实施。DeepEval 已在隔离环境验证；已接入真实 Agent loop 的评测任务运行器，已接入规则与检索评分，语义评分和评测页面尚未上线。
 
 ## 1. 目标与结论
 
@@ -202,7 +202,7 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 | 1 轨迹完善（已完成） | agent.py、client.py、telemetry.py、evaluation/trace.py | request/step/tool关联完整，真实请求快照及错误码；重试、修复、工具失败均可定位 |
 | 2 RAG 明细 | rag/hybrid.py、adapters/tracing.py、plugin.py、citations.py | 排名分数、read_section及证据注入路径完整；分数不冒充概率 |
 | 3 数据集与任务 | evaluation/dataset.py、store.py、runner.py | JSON/JSONL校验、版本映射、隔离执行、取消/中断/重跑；标准答案不泄漏 |
-| 4 规则及检索评测 | evaluation/rules.py、metrics.py | 范围/引用/恢复判定；复用现有 LlamaIndex 指标且与历史结果可对照 |
+| 4 规则及检索评测（已完成） | evaluation/rules.py、metrics.py | 范围/引用/恢复判定；复用现有 LlamaIndex 指标且与历史结果可对照 |
 | 5 DeepEval 适配 | evaluation/deepeval_adapter.py、judge.py | 最终答案、工具、语义评分；单轮/多轮分开；judge 失败可仅重评分 |
 | 6 UI 执行入口 | ui.py、ui.html或拆分静态资源 | 选文件夹/文件、预览、开始、进度、取消、历史、运行前问题提示 |
 | 7 UI 诊断比较 | 同上及 report.py | 所有已实现指标由注册表展示，可下钻 step；原文、评分理由、基线比较、导出 |
@@ -230,3 +230,8 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 上述来源支持工具能力；本文件的架构、UI、分期和默认并发属于针对 mini-harness 的设计建议。
 
 阶段 1 交付与限制见 [实际执行轨迹报告](docs/agent-evaluation-stage1.md)。
+
+阶段 2 交付见 [RAG 证据流报告](docs/agent-evaluation-stage2.md)。
+阶段 3 交付与运行方式见 [数据集与任务报告](docs/agent-evaluation-stage3.md)。
+
+阶段 4 交付与指标口径见 [规则与检索评分报告](docs/agent-evaluation-stage4.md)。
