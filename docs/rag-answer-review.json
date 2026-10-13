@@ -1,0 +1,40 @@
+{
+  "source_sha256": "cd9da630033e09fe2d131f0a0b80e5294b89fb7327054565d884513fc5e2c8ec",
+  "reviewer": "assistant offline review, not independent human review",
+  "human_review_status": "pending",
+  "cases": [
+    {
+      "category": "method",
+      "citation_count": 4,
+      "all_ids_present": true,
+      "all_cited_have_pages": true,
+      "review": "partial",
+      "note": "三个模块的主要事实有原文支持；但用架构图注证明“论文库只有一篇”不成立，目录状态应由工具结果而非论文引用证明。"
+    },
+    {
+      "category": "context",
+      "citation_count": 14,
+      "all_ids_present": true,
+      "all_cited_have_pages": true,
+      "review": "partial",
+      "note": "尺度参数方向及定义有原文支持；公式来源是未经公式增强核验的文本，不能据此承诺精确LaTeX；部分表格章节归属不准确。"
+    },
+    {
+      "category": "annotation",
+      "citation_count": 8,
+      "all_ids_present": true,
+      "all_cited_have_pages": true,
+      "review": "pass",
+      "note": "引用证据全部为user_annotation；明确区分用户批注和作者结论，页码筛选与证据一致。"
+    },
+    {
+      "category": "unanswerable",
+      "citation_count": 2,
+      "all_ids_present": true,
+      "all_cited_have_pages": true,
+      "review": "fail",
+      "note": "没有编造GPU序列号且明确拒答，但“论文中与硬件相关的记录仅为”将局部证据扩大为全文结论，严格忠实度不通过。"
+    }
+  ],
+  "strict_answer_acceptance_passed": false
+}

@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from uuid import uuid4
+from .telemetry import turn_metrics, step_metrics
 from urllib.parse import urlsplit, parse_qs
 
 
@@ -26,7 +27,7 @@ class Workspace:
         self.agent = None
         self.store = None
         self.unsubscribe = None
-        self.state = dict(busy=False, session_id=None, messages=[], activity=[], error=None, paper_ids=[])
+        self.state = dict(busy=False, session_id=None, messages=[], activity=[], error=None, paper_ids=[], turn_metrics=[], step_metrics=[])
 
     def snapshot(self):
         with self.lock:
@@ -78,15 +79,23 @@ class Workspace:
                 for item in event.data.get('evidence',()):
                     evidence[item['evidence_id']] = json.loads(json.dumps(item))
         messages = []
-        for m in self.agent.session.derive_messages():
-            if m.role not in {'user','assistant'} or not m.content: continue
-            row=dict(role=m.role,content=m.content)
-            if m.role=='assistant':
-                ids=dict.fromkeys(re.findall(r'\[cite:([^\]\s]+)\]',m.content))
-                row['citations']=[evidence[i] for i in ids if i in evidence]
+        for event in self.agent.session.events:
+            # The chat transcript keeps original replies; model-context replacements
+            # must not move historical replies past their execution statistics.
+            if event.data.get("surface_op"): continue
+            if event.type not in {'user/message', 'assistant/message'}: continue
+            content = event.data.get('content')
+            if not content: continue
+            role = event.type.split('/')[0]
+            row = dict(role=role, content=content, event_id=event.id)
+            if role == 'assistant':
+                ids = dict.fromkeys(re.findall(r'\[cite:([^\]\s]+)\]', content))
+                row['citations'] = [evidence[i] for i in ids if i in evidence]
             messages.append(row)
         with self.lock:
             self.state["messages"] = messages
+            self.state["turn_metrics"] = json.loads(json.dumps(turn_metrics(self.agent.session.events)))
+            self.state["step_metrics"] = json.loads(json.dumps(step_metrics(self.agent.session.events)))
 
     def _event(self, event):
         labels = {"tool/call": "调用工具", "tool/result": "工具返回", "step/start": "分析与执行", "turn/end": "本轮结束"}
@@ -95,7 +104,7 @@ class Workspace:
             with self.lock:
                 self.state["activity"].append(labels[event.type] + (f" · {name}" if name else ""))
                 self.state["activity"] = self.state["activity"][-30:]
-        if event.type in {"user/message", "assistant/message"}:
+        if event.type in {"user/message", "assistant/message", "turn/end", "metrics/model", "metrics/tool", "rag/trace", "step/start", "step/end"}:
             self._publish_messages()
 
     def _release(self):

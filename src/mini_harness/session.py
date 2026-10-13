@@ -133,6 +133,10 @@ class Session:
     # 投影：日志 → 模型看到的消息历史
     # ------------------------------------------------------------------
 
+    def message_events(self) -> tuple[SessionEvent, ...]:
+        """Visible message events with stable IDs, after surface replacements."""
+        return tuple(_surface_events(self._log))
+
     def derive_messages(self) -> list[Message]:
         """把日志投影成 LLM 消息历史。
 
@@ -143,7 +147,7 @@ class Session:
         其余事件（turn/start、tool/call、turn/end……）只记日志，不发给模型。
         """
         messages: list[Message] = []
-        for event in _surface_events(self._log):
+        for event in self.message_events():
             message = _derive_event_message(event)
             if message is not None:
                 messages.append(message)

@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 import threading
+from time import perf_counter
+from ..telemetry import record_metric
 
 from .catalog import SQLitePaperCatalog
 from .models import Evidence, SourceKind
@@ -48,7 +50,8 @@ class PaperRuntime:
             try:
                 index = ElasticsearchVectorIndex(es.client, self.catalog,
                     EmbeddingProfile.from_metadata(embedding.metadata()), self.config.index_name, analyzer='english')
-                search = LlamaIndexSearchAdapter(HybridSearchService(index, embedding))
+                hybrid = HybridSearchService(index, embedding)
+                search = LlamaIndexSearchAdapter(hybrid, trace_search=hybrid.search_with_trace)
                 parser = DoclingPaperParser(DoclingParserConfig(Path(self.config.root)/'parsed'))
                 chunker = StructuredChunker(EmbeddingTokenizer(model/'tokenizer.json', cfg.model_id))
                 worker = IngestionWorker(self.catalog, parser, chunker, embedding, index, self.config.root)
@@ -83,8 +86,15 @@ class PaperRuntime:
         if not self.catalog.list_active_versions():
             from .models import SearchResult, RetrievalMode
             return SearchResult(query, (), RetrievalMode.HYBRID, 0)
+        started=perf_counter()
         with self._lock:
-            self._load()
+            acquired=perf_counter()
+            was_loaded=self._search is not None
+            try:
+                self._load()
+            finally:
+                record_metric('rag/runtime',dict(lock_wait_ms=(acquired-started)*1000,
+                    initialization_ms=(perf_counter()-acquired)*1000,cold=not was_loaded))
             return self._search.search(query)
 
     def read_section(self, paper_id, version, section_path):

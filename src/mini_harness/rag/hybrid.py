@@ -2,6 +2,7 @@
 from dataclasses import dataclass, replace
 from math import isfinite
 from time import perf_counter
+from contextlib import nullcontext
 
 from .models import Evidence, SearchResult, RetrievalMode
 from .vector_index import ElasticsearchVectorIndex, VectorSearchService
@@ -78,7 +79,12 @@ class HybridSearchService:
     def search(self,query):
         return self.search_with_trace(query)[0]
 
-    def search_with_trace(self,query):
+    def search_with_trace(self,query,*,callback_manager=None):
+        def stage(name):
+            if callback_manager is None: return nullcontext()
+            from llama_index.core.callbacks.schema import CBEventType
+            kind=CBEventType.EMBEDDING if name=="query_embedding" else CBEventType.RETRIEVE
+            return callback_manager.event(kind,payload={"stage":name})
         started=perf_counter()
         catalog=self.index.catalog
         versions=tuple(v for v in catalog.list_active_versions()
@@ -95,13 +101,16 @@ class HybridSearchService:
         if versions:
             limit=max(query.top_k,self.config.candidate_limit)
             t=perf_counter()
-            lexical=index.lexical_search(replace(query,text=rewritten),limit=limit)
+            with stage("bm25"):
+                lexical=index.lexical_search(replace(query,text=rewritten),limit=limit)
             trace['bm25_ms']=(perf_counter()-t)*1000
             t=perf_counter()
-            encoded=self.embedding.embed_query(query.text)
+            with stage("query_embedding"):
+                encoded=self.embedding.embed_query(query.text)
             trace['encoding_ms']=(perf_counter()-t)*1000
             t=perf_counter()
-            vector=index.vector_search(query,encoded,limit=limit)
+            with stage("knn"):
+                vector=index.vector_search(query,encoded,limit=limit)
             trace['knn_ms']=(perf_counter()-t)*1000
         # Both ES routes use the same frozen prefilter. Recheck live state after both finish.
         visible={(v.paper_id,v.version) for v in catalog.list_active_versions()} & {(v.paper_id,v.version) for v in versions}
@@ -109,7 +118,8 @@ class HybridSearchService:
             return (hit.chunk.paper_id,hit.chunk.version) in visible and hit.chunk.source_kind in query.source_kinds
         lexical=tuple(h for h in lexical if allowed(h))
         vector=tuple(h for h in vector if allowed(h))
-        fused=reciprocal_rank_fusion(lexical,vector,self.config)
+        with stage("fusion"):
+            fused=reciprocal_rank_fusion(lexical,vector,self.config)
         evidence=[]
         for row in fused[:query.top_k]:
             c=row['chunk']

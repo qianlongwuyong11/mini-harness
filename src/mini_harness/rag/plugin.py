@@ -3,6 +3,8 @@ from dataclasses import replace
 import json
 
 from ..client import Message, Tool
+from ..telemetry import record_metric
+from ..meter import estimate_tokens
 from ..cordis import Context, depends
 from .citations import EvidenceLedger, FALLBACK
 from .models import SearchQuery, SourceKind
@@ -55,7 +57,11 @@ def rag_consumer(ctx: Context, _config=None):
         return tuple(ids)
 
     def pack(items):
+        items=tuple(items)
         accepted = ledger.add(items)
+        record_metric("rag/evidence",dict(received=len(items),added=len(accepted),
+            omitted=len(items)-len(accepted),retained=len(ledger.items),
+            estimated_tokens=estimate_tokens(ledger.payload()),budget=ledger.budget))
         return json.dumps(dict(evidence=[e.to_dict() for e in accepted],
             retained_evidence_ids=list(ledger.items),
             notice='仅可引用当前轮证据；未返回的内容可能超过预算。'),ensure_ascii=False)
@@ -114,6 +120,7 @@ def rag_consumer(ctx: Context, _config=None):
         try:
             ids = ledger.validate_answer(reply.content or '')
         except ValueError:
+            request.session.append("rag/repair",{"reason":"citation_validation"})
             # One bounded repair through the existing client; no unverified answer is stored.
             repair = replace(updated,messages=[*messages,Message(role='assistant',content=reply.content or ''),
                 Message(role='user',content='引用或证据范围校验失败。不得由片段断言全文没有记录；请仅使用本轮有效 [cite:ID] 改写；无依据时只回答：'+FALLBACK)])

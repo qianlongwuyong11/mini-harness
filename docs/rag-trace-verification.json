@@ -1,0 +1,75 @@
+{
+  "validation": "real local ES and E5; no remote model call",
+  "events": [
+    {
+      "type": "rag/runtime",
+      "data": {
+        "lock_wait_ms": 0.0037999998312443495,
+        "initialization_ms": 20559.572800000296,
+        "cold": true
+      }
+    },
+    {
+      "type": "rag/trace",
+      "data": {
+        "trace_id": "71877bd0fb894963867085dbeb8bb984",
+        "engine": "llamaindex_callbacks",
+        "status": "ok",
+        "top_k": 8,
+        "spans": [
+          {
+            "id": "6ced867c-f426-4360-85fa-7e3887f62102",
+            "parent_id": "c0646f0c-373e-4ac8-9325-22fba4f03e00",
+            "name": "bm25",
+            "event_type": "retrieve",
+            "elapsed_ms": 297.30460000018866,
+            "status": "ok"
+          },
+          {
+            "id": "939afb49-cee8-4189-91a7-233a1a747a23",
+            "parent_id": "c0646f0c-373e-4ac8-9325-22fba4f03e00",
+            "name": "query_embedding",
+            "event_type": "embedding",
+            "elapsed_ms": 238.16739999983838,
+            "status": "ok"
+          },
+          {
+            "id": "7e74f226-98cf-4468-ad3e-7dca164f49ca",
+            "parent_id": "c0646f0c-373e-4ac8-9325-22fba4f03e00",
+            "name": "knn",
+            "event_type": "retrieve",
+            "elapsed_ms": 118.90959999982442,
+            "status": "ok"
+          },
+          {
+            "id": "2b0cc066-8751-436b-98bf-457298230dad",
+            "parent_id": "c0646f0c-373e-4ac8-9325-22fba4f03e00",
+            "name": "fusion",
+            "event_type": "retrieve",
+            "elapsed_ms": 0.2668000001904147,
+            "status": "ok"
+          },
+          {
+            "id": "c0646f0c-373e-4ac8-9325-22fba4f03e00",
+            "parent_id": "root",
+            "name": "retrieve",
+            "event_type": "retrieve",
+            "elapsed_ms": 693.5641999998552,
+            "status": "ok"
+          }
+        ],
+        "candidate_count": 31,
+        "returned_count": 8,
+        "bm25_candidates": 20,
+        "vector_candidates": 20,
+        "embedding_profile": "5a0b4797e75c38bd",
+        "active_versions": [
+          [
+            "sparsebev-0ea0a21472845724",
+            "557c3224b3e11dd5d1372e20"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,497 @@
+{
+  "schema": 1,
+  "scope": "SparseBEV only; heldout queries newly authored before running; not independent-paper generalization",
+  "corpus_sha256": "fcbb1124cc65cf3b8f7c6e5e8f7bbc8882cccb567def2dea96fec3627dfb2d8f",
+  "paper_id": "sparsebev-0ea0a21472845724",
+  "version": "557c3224b3e11dd5d1372e20",
+  "questions": [
+    {
+      "id": "q1",
+      "query": "查询向量包含哪些几何属性和运动属性？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-d2e5360751b0b9cdefcd18e795751e73",
+          "ordinal": 21,
+          "text_sha256": "07ef54c9faf2cb38a36807200865248da71bb22908fddc147e63d93b775f8f08",
+          "page_spans": [
+            {
+              "start": 3,
+              "end": 3
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "query": "自注意力如何用距离和系数调整每个查询的感受野？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-428f08580e2d4d268912ca629dbd94e1",
+          "ordinal": 25,
+          "text_sha256": "aacaf5d4014ab1f0569d5ff7a210f751bbc27773dbc7d824d5fa54590dd998db",
+          "page_spans": [
+            {
+              "start": 4,
+              "end": 4
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "query": "为什么不同类别的物体需要不同大小的感受野？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-e67c03e8eed72ab9cf48b852cf70dd2b",
+          "ordinal": 26,
+          "text_sha256": "a180f98fd2552b833c53713f99597f79f09d267f5cffba6708b7769b53b44a4a",
+          "page_spans": [
+            {
+              "start": 4,
+              "end": 4
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-3e928121a8e6ea033e8c78a28f6107fa",
+          "ordinal": 59,
+          "text_sha256": "80fb519814ee18a37ef62a9c921e1e11b44dcf04f671cf1a82614a41e9f3ab5a",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "query": "如何根据物体速度对齐历史帧的采样位置？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-c5c9b9cff3a6f2d3f2a20a008f98ec9b",
+          "ordinal": 28,
+          "text_sha256": "5f5fe3e6bc8dd7c3606bfb21d7251dc533a9baf2b29bd1d79d285901966e80d9",
+          "page_spans": [
+            {
+              "start": 4,
+              "end": 4
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-f69c21c657ef58c8950aa09ffe3389fd",
+          "ordinal": 29,
+          "text_sha256": "c704485e84da08be305578b1d97fe91ae58140056f580d2ba1e48ccb9f770fab",
+          "page_spans": [
+            {
+              "start": 4,
+              "end": 5
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-7d40271104f5fd5df4b396d162b91128",
+          "ordinal": 66,
+          "text_sha256": "cb6cfe7948576e39f4949bcbb79d9e7d8bd50bfc0a43a2623202e0611d4ca039",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "query": "采样之后，如何在查询的引导下混合通道和空间点特征？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-8cb92927265525b02fc09bf726040676",
+          "ordinal": 37,
+          "text_sha256": "bb945b464b25530e4456d3b29d34e32da1633d909bc2e772d29c525a2dab6877",
+          "page_spans": [
+            {
+              "start": 5,
+              "end": 5
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "query": "双分支模型的慢速流与快速流分别有什么作用？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-dfd13d8300c1d95feaf0defb702b08a3",
+          "ordinal": 39,
+          "text_sha256": "abc2da59e31a6fac6246708d80faa7bde8f93a598c6f7de6e08d53e1d28da9d2",
+          "page_spans": [
+            {
+              "start": 5,
+              "end": 5
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q7",
+      "query": "增加视频帧数和每帧采样点数会对效果有什么影响？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-2b99fa67fbffd89f266dc0d0d0a3274b",
+          "ordinal": 61,
+          "text_sha256": "059a9235387b173f11385cebc374634dee058d3d58698de82735155e111d70c0",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-d60c904083eba81d3d4ff14108bb1256",
+          "ordinal": 62,
+          "text_sha256": "5806f09d8a47c72dd9e351ae9ee40ebb0de44bb9380828e5479c8ec597a854c0",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q8",
+      "query": "这个方法依赖自车位姿带来了什么局限？",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-1f6948d2a5924982069644560613b440",
+          "ordinal": 68,
+          "text_sha256": "0af35170242ee40797cafbf17edf0d3599a7f0fda8c3d3240b58ccd13c8016f9",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q9",
+      "query": "Table 4 SASA 与普通 MHSA 的消融实验比较",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-015f2fa3ff27ec79d6b4b2dba20afd9d",
+          "ordinal": 55,
+          "text_sha256": "b9ca6bee088c434665c7ccf6416c4c0971281319c168d18292f62acbe1a5db4d",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-3e928121a8e6ea033e8c78a28f6107fa",
+          "ordinal": 59,
+          "text_sha256": "80fb519814ee18a37ef62a9c921e1e11b44dcf04f671cf1a82614a41e9f3ab5a",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "query": "Table 5 ego motion 和 object motion 对齐效果",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-b4604b9b59f96921a0d3f67f47651b88",
+          "ordinal": 64,
+          "text_sha256": "0bbe9668841b87ba601a9600c9d0a19c150e5ee4b90158f985af217c9be5fdcb",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-7d40271104f5fd5df4b396d162b91128",
+          "ordinal": 66,
+          "text_sha256": "cb6cfe7948576e39f4949bcbb79d9e7d8bd50bfc0a43a2623202e0611d4ca039",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "query": "SparseBEV Query Formulation 初始化的柱状查询",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-d2e5360751b0b9cdefcd18e795751e73",
+          "ordinal": 21,
+          "text_sha256": "07ef54c9faf2cb38a36807200865248da71bb22908fddc147e63d93b775f8f08",
+          "page_spans": [
+            {
+              "start": 3,
+              "end": 3
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "query": "Adaptive Mixing channel mixing point mixing 顺序",
+      "split": "development",
+      "evidence": [
+        {
+          "chunk_id": "chunk-8cb92927265525b02fc09bf726040676",
+          "ordinal": 37,
+          "text_sha256": "bb945b464b25530e4456d3b29d34e32da1633d909bc2e772d29c525a2dab6877",
+          "page_spans": [
+            {
+              "start": 5,
+              "end": 5
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-7d40271104f5fd5df4b396d162b91128",
+          "ordinal": 66,
+          "text_sha256": "cb6cfe7948576e39f4949bcbb79d9e7d8bd50bfc0a43a2623202e0611d4ca039",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-85267b6bbf4b540a7e2f9e52f88ca6a5",
+          "ordinal": 69,
+          "text_sha256": "b2bcc9b27564d75e9c65cede0c8de61e64ddb621d854b26b48b318c19a74e74a",
+          "page_spans": [
+            {
+              "start": 8,
+              "end": 8
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h1",
+      "query": "训练时用什么算法将真实物体与预测结果匹配？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-243e4fc1baa8a3f5b9980888dd0a18ae",
+          "ordinal": 47,
+          "text_sha256": "22027832dc9a705fb77b109ca4ee4fd1267909ca81ef9b416de4b9119b870be5",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "query": "分类任务和三维边界框回归分别采用什么损失函数？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-243e4fc1baa8a3f5b9980888dd0a18ae",
+          "ordinal": 47,
+          "text_sha256": "22027832dc9a705fb77b109ca4ee4fd1267909ca81ef9b416de4b9119b870be5",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h3",
+      "query": "优化器、全局批量大小和初始学习率是多少？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-243e4fc1baa8a3f5b9980888dd0a18ae",
+          "ordinal": 47,
+          "text_sha256": "22027832dc9a705fb77b109ca4ee4fd1267909ca81ef9b416de4b9119b870be5",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h4",
+      "query": "nuScenes 数据的训练、验证、测试视频分别有多少个？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-daec44dc3b3a808b9db42c884e2677ac",
+          "ordinal": 49,
+          "text_sha256": "81e4b5061419d1208b6703c1388fabe7a847d968d4854c19510cd3e632c92f4f",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h5",
+      "query": "NDS综合了哪些检测误差指标？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-daec44dc3b3a808b9db42c884e2677ac",
+          "ordinal": 49,
+          "text_sha256": "81e4b5061419d1208b6703c1388fabe7a847d968d4854c19510cd3e632c92f4f",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h6",
+      "query": "解码器有多少层，不同层是否共享权重？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-243e4fc1baa8a3f5b9980888dd0a18ae",
+          "ordinal": 47,
+          "text_sha256": "22027832dc9a705fb77b109ca4ee4fd1267909ca81ef9b416de4b9119b870be5",
+          "page_spans": [
+            {
+              "start": 6,
+              "end": 6
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h7",
+      "query": "Figure 1 的测速使用哪块显卡和什么计算精度？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-7590c64a936a814166cc5d71d1d84c2f",
+          "ordinal": 6,
+          "text_sha256": "c7b6dd1d6e5c972eda996bcd559bb7ccf99b3ee4930bdc4902fda8682710204a",
+          "page_spans": [
+            {
+              "start": 1,
+              "end": 1
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    },
+    {
+      "id": "h8",
+      "query": "为什么BEV柱状查询优于三维参考点？",
+      "split": "heldout",
+      "evidence": [
+        {
+          "chunk_id": "chunk-bcdee9cb267d97c7c6760b0c37ea4c5c",
+          "ordinal": 53,
+          "text_sha256": "c49b96b0652530e7f3f3cf530f8c509cddaaff744cf5290cae275888e9e9d05c",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        },
+        {
+          "chunk_id": "chunk-531284fdb2f8e23d466b235a4b451b8f",
+          "ordinal": 58,
+          "text_sha256": "16a47eabd8b0b547992fc6e423bc997c346247a18a02db5e9beeff308410320b",
+          "page_spans": [
+            {
+              "start": 7,
+              "end": 7
+            }
+          ],
+          "rationale": "该块直接包含问题所询问的定义、实验设置或结果"
+        }
+      ]
+    }
+  ]
+}

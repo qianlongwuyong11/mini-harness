@@ -11,6 +11,8 @@ from llama_index.core.schema import NodeWithScore, QueryBundle, TextNode
 from pydantic import PrivateAttr
 
 from ..interfaces import EmbeddingService
+from ...telemetry import record_metric
+from .tracing import LocalTraceHandler
 from ..models import (
     BoundingBox, Chunk, CoordinateSpace, Evidence, PageSpan, SearchQuery,
     SearchResult, SourceBlock, SourceKind,
@@ -56,8 +58,8 @@ def to_evidence(hit: NodeWithScore) -> Evidence:
 
 class PaperRetriever(BaseRetriever):
     """Fixed request scope; backend owns ES filters, embedding and ranking."""
-    def __init__(self, backend: SearchBackend, query: SearchQuery):
-        super().__init__(callback_manager=CallbackManager([]))
+    def __init__(self, backend: SearchBackend, query: SearchQuery, callback_manager=None):
+        super().__init__(callback_manager=callback_manager or CallbackManager([]))
         self.backend = backend
         self.query = query
 
@@ -69,22 +71,41 @@ class PaperRetriever(BaseRetriever):
 
 class LlamaIndexSearchAdapter:
     """Framework-free search input/output; per-call state supports concurrent queries."""
-    def __init__(self, backend: SearchBackend):
+    def __init__(self, backend: SearchBackend, *, trace_search=None):
         self.backend = backend
+        self.trace_search = trace_search
 
     def search(self, query: SearchQuery) -> SearchResult:
-        # Capture this invocation's result only; never run the backend twice.
         results: list[SearchResult] = []
         backend = self.backend
-
+        handler=LocalTraceHandler()
+        manager=CallbackManager([handler])
+        backend_trace={}
+        trace_search=self.trace_search
         class Capture:
             def search(self, request: SearchQuery) -> SearchResult:
-                result = backend.search(request)
+                if trace_search is not None:
+                    result,trace=trace_search(request,callback_manager=manager)
+                    backend_trace.update(trace)
+                else:
+                    result=backend.search(request)
                 results.append(result)
                 return result
-
-        hits = PaperRetriever(Capture(), query).retrieve(query.text)
-        return replace(results[0], evidence=tuple(to_evidence(hit) for hit in hits))
+        status='error'
+        try:
+            hits = PaperRetriever(Capture(), query, manager).retrieve(query.text)
+            result=replace(results[0], evidence=tuple(to_evidence(hit) for hit in hits))
+            status='ok'
+            return result
+        finally:
+            record_metric('rag/trace',dict(trace_id=handler.trace_id,engine='llamaindex_callbacks',
+                status=status,top_k=query.top_k,spans=handler.spans,
+                candidate_count=results[0].candidate_count if results else None,
+                returned_count=len(results[0].evidence) if results else None,
+                bm25_candidates=len(backend_trace.get('bm25_candidates',[])),
+                vector_candidates=len(backend_trace.get('vector_candidates',[])),
+                embedding_profile=backend_trace.get('embedding_profile'),
+                active_versions=backend_trace.get('active_versions',[])))
 
 
 class LocalEmbeddingAdapter(BaseEmbedding):

@@ -1,0 +1,116 @@
+{
+  "status": "ready",
+  "pages": 14,
+  "chunks": 106,
+  "process_model_load_seconds": 14.853204200000619,
+  "import_seconds": 86.00392329999886,
+  "amortized_seconds_per_page": 6.143137378571347,
+  "stage_seconds": {
+    "startup": 16.302124499998172,
+    "parsing": 51.131182199998875,
+    "chunking": 0.4894784000061918,
+    "embedding": 30.464725899997575,
+    "indexing": 3.1033185999986017,
+    "publishing": 1.091119600001548
+  },
+  "index_stats": {
+    "primaries": {
+      "docs": {
+        "count": 106,
+        "deleted": 0,
+        "total_size_in_bytes": 483102
+      },
+      "store": {
+        "size_in_bytes": 483329,
+        "total_data_set_size_in_bytes": 483329,
+        "reserved_in_bytes": 0
+      }
+    },
+    "total": {
+      "docs": {
+        "count": 106,
+        "deleted": 0,
+        "total_size_in_bytes": 483102
+      },
+      "store": {
+        "size_in_bytes": 483329,
+        "total_data_set_size_in_bytes": 483329,
+        "reserved_in_bytes": 0
+      }
+    }
+  },
+  "isolated_run": "ff73b4aa29",
+  "cpu_only": true,
+  "notes": [
+    "Model files already cached; fresh catalog and artifact directory",
+    "RSS includes worker and child processes, excludes ES; system available memory includes all apps",
+    "Per-page figure is amortized whole-document import, not individual page latency",
+    "Swap counters on Windows may be zero or unavailable; no no-paging guarantee",
+    "Post-import stats recorded after background segment flush; include translog separately, not only store bytes"
+  ],
+  "peak_process_tree_rss_bytes": 2978521088,
+  "minimum_system_available_bytes": 209358848,
+  "physical_memory_bytes": 16963534848,
+  "swap_before": {
+    "total": 46956654592,
+    "used": 4184932352,
+    "free": 42771722240,
+    "percent": 8.9,
+    "sin": 0,
+    "sout": 0
+  },
+  "swap_after": {
+    "total": 46956654592,
+    "used": 5724680192,
+    "free": 41231974400,
+    "percent": 12.2,
+    "sin": 0,
+    "sout": 0
+  },
+  "sample_count": 423,
+  "artifact_bytes": 11796066,
+  "resource_gates": {
+    "import_ready": true,
+    "available_memory_ge_2gib": false
+  },
+  "post_import_index_stats": {
+    "primaries": {
+      "docs": {
+        "count": 106,
+        "deleted": 0,
+        "total_size_in_bytes": 483102
+      },
+      "store": {
+        "size_in_bytes": 483329,
+        "total_data_set_size_in_bytes": 483329,
+        "reserved_in_bytes": 0
+      },
+      "translog": {
+        "operations": 106,
+        "size_in_bytes": 2079065,
+        "uncommitted_operations": 106,
+        "uncommitted_size_in_bytes": 2079065,
+        "earliest_last_modified_age": 79114
+      }
+    },
+    "total": {
+      "docs": {
+        "count": 106,
+        "deleted": 0,
+        "total_size_in_bytes": 483102
+      },
+      "store": {
+        "size_in_bytes": 483329,
+        "total_data_set_size_in_bytes": 483329,
+        "reserved_in_bytes": 0
+      },
+      "translog": {
+        "operations": 106,
+        "size_in_bytes": 2079065,
+        "uncommitted_operations": 106,
+        "uncommitted_size_in_bytes": 2079065,
+        "earliest_last_modified_age": 79114
+      }
+    }
+  }
+}

@@ -8,17 +8,32 @@
 .paper-panel{padding:12px 30px;border-bottom:1px solid var(--line);background:#f0f4ed}.paper-panel summary{cursor:pointer;font-weight:600;color:var(--green)}.paper-body{max-height:32vh;overflow:auto;padding-top:10px}.upload-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.upload-row input{max-width:240px}.paper-help{font-size:11px;color:var(--muted);margin:8px 0}.paper-row{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:flex-start}.paper-row input{margin-top:6px}.paper-name{font-weight:600;overflow-wrap:anywhere}.paper-meta{font-size:11px;color:var(--muted)}.paper-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}.paper-actions button,.source-button{border:1px solid #cbd9c9;border-radius:7px;background:white;padding:4px 9px;color:var(--green);font-size:11px}.paper-error{color:#a55436;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere}.service-status{font-size:11px;color:#597461;margin:8px 0}.citations{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.citation{padding:10px;margin-top:8px;background:#eef3eb;border-radius:8px}.citation p{font-size:11px;color:var(--muted);margin:4px 0}.citation pre{white-space:pre-wrap;font:12px/1.6 inherit;max-height:180px;overflow:auto}.paper-notice{font-size:12px;color:var(--green)}@media(max-width:640px){.paper-panel{padding:10px 16px}.paper-body{max-height:30vh}}
 
 .markdown{white-space:normal}.markdown p{margin:.65em 0}.markdown h1,.markdown h2,.markdown h3,.markdown h4{line-height:1.45;margin:1.1em 0 .5em;font-weight:650}.markdown h1{font-size:24px}.markdown h2{font-size:21px}.markdown h3{font-size:18px}.markdown ul,.markdown ol{padding-left:1.6em}.markdown li{margin:.35em 0}.markdown code{background:#e8ede7;border-radius:4px;padding:2px 5px;font:13px Consolas,monospace}.markdown pre{background:#edf1eb;border:1px solid var(--line);border-radius:9px;padding:14px;overflow:auto;white-space:pre}.markdown pre code{padding:0;background:none}.markdown blockquote{margin:12px 0;padding:4px 16px;border-left:3px solid #94b29b;color:#586b60}.markdown a{color:var(--green);text-decoration:underline}.markdown table{border-collapse:collapse;display:block;overflow:auto}.markdown th,.markdown td{border:1px solid var(--line);padding:8px 12px}.markdown th{background:var(--soft)}.reply-option{display:block;width:100%;text-align:left;border:1px solid #cad9c9;border-radius:10px;background:#fff;color:var(--ink);padding:12px 16px;margin:8px 0;line-height:1.7}.reply-option:hover{background:var(--soft);border-color:#749881}.reply-option:focus-visible{outline:2px solid var(--green);outline-offset:2px}.reply-option small{display:block;color:var(--green);margin-top:5px}.choice-help{font-size:12px;color:var(--muted)}
+
+.turn-metrics{max-width:780px;margin:18px auto;border:1px solid var(--line);border-radius:10px;padding:12px;background:#f0f4ed}.turn-metrics summary{cursor:pointer;color:var(--green);font-weight:600}.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}.metric-box{padding:9px;background:white;border-radius:7px}.metric-box b{display:block;font-size:17px}.metric-box small,.metric-note{font-size:11px;color:var(--muted)}.metric-detail{font-size:12px;overflow-wrap:anywhere;margin:8px 0;padding-top:8px;border-top:1px solid var(--line)}
+
+.step-line{max-width:780px;margin:-12px auto 22px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.step-link,.execution-open{border:0;background:transparent;color:var(--green);font-size:12px;padding:5px 8px;border-radius:6px;cursor:pointer}
+.step-link:hover,.execution-open:hover{background:var(--soft)}.step-link:focus-visible{outline:2px solid var(--green)}
+.execution-open{margin-left:auto;margin-right:12px;border:1px solid var(--line)}
+.execution-dialog{padding:0;width:min(760px,94vw);max-height:86vh;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--paper)}
+.execution-dialog::backdrop{background:#172b2544}.execution-bar{position:sticky;top:0;background:var(--paper);padding:16px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:1}
+.execution-bar select{max-width:65%;padding:7px;border:1px solid var(--line);border-radius:6px;background:white}.execution-bar button{border:1px solid var(--line);border-radius:6px;background:white;color:var(--green);padding:6px 9px}
+.execution-content{padding:18px}.execution-content pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto;background:var(--soft);padding:10px;border-radius:6px;font-size:12px}
+.execution-content details{border-top:1px solid var(--line);padding:9px 0}.execution-content summary{cursor:pointer;font-size:12px;color:var(--green)}
 </style>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar"><div class="brand"><span class="mark">m</span>mini-harness</div><div class="caption">PERSONAL KNOWLEDGE SPACE</div><button class="new" id="new">＋ &nbsp;开启新对话</button><div class="label">最近的对话</div><div id="history" class="history"></div><div class="foot">本地工作台 · 你的知识，你的空间<br>会话保存在本机，模型请求使用现有配置。</div></aside>
-<main class="main"><header class="top"><strong>知识工作台 <button class="mobile" id="mobileNew">＋ 新对话</button></strong><span class="badge" id="status"><i class="dot"></i>正在连接</span></header>
+<main class="main"><header class="top"><strong>知识工作台 <button class="mobile" id="mobileNew">＋ 新对话</button></strong><button type="button" class="execution-open" id="executionOpen">执行记录</button><span class="badge" id="status"><i class="dot"></i>正在连接</span></header>
 <section class="paper-panel"><details open><summary>论文库 <span id="paperCount"></span></summary><div class="paper-body"><div class="upload-row"><input id="paperFile" type="file" accept="application/pdf,.pdf" aria-label="选择论文 PDF"><button class="send" id="uploadPaper" type="button">上传论文</button></div><p class="paper-help">PDF ≤ 30 MB · 最多 300 页。上传后在本地解析入库；勾选已就绪论文后提问。所选证据会随问题发送至现有模型服务。</p><div id="paperNotice" class="paper-notice" role="status"></div><div id="paperService" class="service-status"></div><div id="papers"></div></div></details></section>
 <div class="feed" id="feed"><section class="welcome" id="welcome"><div class="eyebrow">A LITTLE SPACE TO THINK</div><h1>让知识井然有序，<br>让想法自然生长。</h1><p>从一个问题开始，一起整理、探索你的知识库。</p><div class="cards"><button class="card" data-prompt="请先只读检查我的知识库，汇总断链和元数据问题，暂时不要修改文件。"><div class="icon">⌘</div><b>检查知识库</b><span>梳理断链、标题和元数据问题 ↗</span></button><button class="card" data-prompt="请介绍你当前可以使用的工具，以及如何导入文档。"><div class="icon">▤</div><b>了解文档导入</b><span>查看支持的格式和导入方式 ↗</span></button><button class="card" data-prompt="请帮我查找知识库中的相关笔记。请先询问我想查找的主题。"><div class="icon">⌕</div><b>探索已有笔记</b><span>从已有内容中发现线索 ↗</span></button><button class="card" data-prompt="请先分析知识库可以如何整理，给出分步建议，暂时不要执行修改。"><div class="icon">◇</div><b>制定整理计划</b><span>先讨论思路，再着手修改 ↗</span></button></div></section><div id="messages" aria-live="polite"></div><div class="busy" id="busy" hidden>● Agent 正在处理，请稍候…</div></div>
 <form class="composer" id="form"><div class="notice" id="error" role="alert"></div><div class="inputbox"><textarea id="input" placeholder="告诉我，你想从哪里开始？" aria-label="消息" maxlength="32000" rows="3"></textarea><div class="inputbottom"><span class="hint">Enter 发送 · Shift + Enter 换行</span><button class="send" id="send" type="submit">发送 ↑</button></div></div><div class="under">连接真实 mini-harness Agent · 请核对重要结果</div></form></main>
 <aside class="context"><h3>工作空间</h3><div class="info"><b>◉ &nbsp; 本地会话</b><p>沿用 CLI 的 JSONL 历史。切换会话前会保存当前记录。</p></div><div class="info"><b>◇ &nbsp; 知识库助手</b><p>左侧论文库支持 PDF 导入和进度查看。勾选范围后提问，回答下方的引用可以打开原 PDF。</p></div><div class="label">本轮执行动态</div><ul id="activity" class="activity"><li>等待你的第一个问题</li></ul><div class="info"><p>密钥从本地 .env 读取，不在浏览器中保存。关闭页面不会停止服务；在启动窗口按 Ctrl+C 退出。</p></div></aside>
 </div>
+<dialog id="executionDialog" class="execution-dialog" aria-label="Step 执行详情">
+<div class="execution-bar"><strong>执行详情</strong><select id="stepSelect" aria-label="选择执行步骤"></select><button id="previousStep" type="button" aria-label="上一步">←</button><button id="nextStep" type="button" aria-label="下一步">→</button><button id="closeExecution" type="button">关闭</button></div>
+<div id="executionContent" class="execution-content"></div></dialog>
 <script>
 const token='__UI_TOKEN__';const $=id=>document.getElementById(id);let busy=false,current=null,lastMessages='[]',lastSessions='',localError='',selectedPapers=[],lastPapers='',uploading=false;
 async function api(path,data){const r=await fetch('/api/'+path,{method:data===undefined?'GET':'POST',headers:{'X-UI-Token':token,'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error||'请求失败');return body}
@@ -50,7 +65,82 @@ function renderMarkdown(text,interactive){
  }return root;
 }
 
-function render(state){selectedPapers=state.paper_ids||[];current=state.session_id;setBusy(state.busy);$('status').textContent=state.busy?'● 正在执行':'● 已连接';$('error').textContent=state.error||localError;const key=JSON.stringify(state.messages);if(key!==lastMessages){lastMessages=key;$('messages').replaceChildren();for(const m of state.messages){const el=document.createElement('article');el.className='message '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'MINI-HARNESS';const body=document.createElement('div');body.className='bubble';if(m.role==='assistant'){body.classList.add('markdown');body.append(renderMarkdown(m.content,m===state.messages[state.messages.length-1]))}else body.textContent=m.content;el.append(role,body);if(m.citations&&m.citations.length)el.append(citationCards(m.citations));$('messages').append(el)}$('feed').scrollTop=$('feed').scrollHeight}$('welcome').hidden=state.messages.length>0;$('activity').replaceChildren();for(const text of state.activity.length?state.activity:['等待任务开始']){const li=document.createElement('li');li.textContent=text;$('activity').append(li)}document.querySelectorAll('.session').forEach(b=>b.classList.toggle('active',b.dataset.id===current))}
+const stepStatus={running:'执行中',completed:'完成',completed_with_errors:'完成 · 工具有错误',error:'失败',interrupted:'中断'};
+let executionRows=[],selectedStepId=null,lastExecutionKey='';
+function stepTitle(row){return 'Turn '+row.turn_number+' · Step '+row.number}
+function stepLine(row){
+ const line=node('div','','step-line');line.dataset.stepId=String(row.id);
+ const tools=row.tool_calls.map(c=>c.name).join('、');
+ const label=stepTitle(row)+' · '+(stepStatus[row.status]||row.status)+' · '+(row.elapsed_ms/1000).toFixed(2)+' s'+
+  (row.instrumented?' · 模型 '+row.model_count+' 次 · 工具 '+row.tool_calls.length+' 次':' · 历史记录')+(tools?' · '+tools:'')+' ↗';
+ const button=node('button',label,'step-link');button.type='button';button.onclick=()=>openExecution(row.id);line.append(button);return line;
+}
+function metricDetails(row){
+ const d=node('div','');d.append(node('h3',stepTitle(row)+' · '+(stepStatus[row.status]||row.status)));
+ d.append(node('p','本步从模型请求准备开始，到模型回答及其全部工具返回后结束；重试、引用修复属于同一步。','metric-note'));
+ if(!row.instrumented)d.append(node('p','旧记录未启用完整计量，缺失的耗时和 token 不补算。','metric-note'));
+ const grid=node('div','','metric-grid');const item=(label,value)=>{const box=node('div','','metric-box');box.append(node('small',label),node('b',String(value)));grid.append(box)};
+ item('Step 总耗时',(row.elapsed_ms/1000).toFixed(2)+' s');item('模型调用 / 失败',row.instrumented?row.model_count+' / '+row.model_errors:'未记录');item('工具调用 / 失败',row.tool_calls.length+' / '+row.tool_calls.filter(c=>c.status==='error').length);
+ item('输入 token',row.tokens.prompt_tokens??'未提供');item('输出 token',row.tokens.completion_tokens??'未提供');item('总 token',row.tokens.total_tokens??'未提供');item('模型累计耗时',row.instrumented?(row.model_ms/1000).toFixed(2)+' s':'未记录');
+ item('重试 / 计划等待',row.retries+' / '+(row.retry_wait_ms/1000).toFixed(2)+' s');item('引用修复',row.citation_repairs);d.append(grid);
+ d.append(node('p','各层耗时有包含关系，不直接相加。'+(row.usage_complete?'token 来自模型服务。':'token 仅累计服务已返回用量，可能不完整。')+(row.timing_source==='event_timestamps'?'本步耗时由旧事件时间估算。':''),'metric-note'));
+ if(row.error_type)d.append(node('p','异常：'+row.error_type,'paper-error'));
+ if(row.tokens.prompt_cache_hit_tokens!==null)d.append(node('p','缓存命中输入 token：'+row.tokens.prompt_cache_hit_tokens,'metric-detail'));
+ d.append(node('h4','模型请求'));
+ for(const [i,c] of row.model_calls.entries())d.append(node('p','#'+(i+1)+' · '+c.model+' · '+c.elapsed_ms.toFixed(1)+' ms · '+c.status+' · 输入 '+(c.usage?.prompt_tokens??'未知')+' / 输出 '+(c.usage?.completion_tokens??'未知')+(c.error_type?' · '+c.error_type:''),'metric-detail'));
+ if(!row.model_calls.length)d.append(node('p',row.status==='running'?'模型处理中或尚未发起请求。':'没有模型计量记录。','metric-note'));
+ d.append(node('h4','工具与返回结果'));
+ for(const c of row.tool_calls){const detail=node('details','');detail.dataset.callId=c.call_id;detail.append(node('summary',c.name+' · '+c.status+' · '+(c.elapsed_ms==null?'耗时未记录':c.elapsed_ms.toFixed(1)+' ms')));
+  detail.append(node('p','参数（'+c.arguments_chars+' 字符）'),node('pre',c.arguments_preview||'{}'),node('p','返回结果'+(c.result_chars==null?' · 尚未返回':'（'+c.result_chars+' 字符）')),node('pre',c.result_preview??'尚未返回'));
+  if(c.arguments_chars>1200||c.result_chars>1200)detail.append(node('p','这里预览前 1200 字符；完整工具事件保留在本地会话 JSONL。','metric-note'));d.append(detail);
+ }
+ if(!row.tool_calls.length)d.append(node('p','本步没有工具调用。','metric-note'));
+ for(const c of row.runtime)d.append(node('p','RAG · '+(c.call_id||'历史工具')+' · 等待 '+c.lock_wait_ms.toFixed(1)+' ms · 初始化 '+c.initialization_ms.toFixed(1)+' ms'+(c.cold?'（首次加载）':''),'metric-detail'));
+ for(const e of row.evidence)d.append(node('p','证据新增 '+e.added+' / 返回 '+e.received+' · 当前保留 '+e.retained+' · 本地估算 '+e.estimated_tokens+' / '+e.budget+' token','metric-detail'));
+ for(const trace of row.rag){const box=node('div','','metric-detail');box.append(node('strong','LlamaIndex · '+trace.status+' · 返回 '+(trace.returned_count??'未知')+' / 候选 '+(trace.candidate_count??'未知')));box.append(node('p','所属工具调用：'+(trace.call_id||'未记录')+' · BM25 '+trace.bm25_candidates+' / 向量 '+trace.vector_candidates+' · top_k '+trace.top_k));for(const span of trace.spans)box.append(node('div',span.name+'：'+span.elapsed_ms.toFixed(2)+' ms · '+span.status));d.append(box)}
+ d.append(node('p','当前主 Agent 的本步数据；子 Agent 会话未合并。没有标准答案的普通对话不计算 Recall/MRR。','metric-note'));return d;
+}
+function openExecution(id){selectedStepId=id??executionRows.at(-1)?.id;lastExecutionKey='';refreshExecution();if(!$('executionDialog').open)$('executionDialog').showModal()}
+function refreshExecution(){
+ const key=JSON.stringify([selectedStepId,executionRows]);if(key===lastExecutionKey)return;lastExecutionKey=key;
+ const select=$('stepSelect');select.replaceChildren();for(const row of executionRows){const option=node('option',stepTitle(row)+' · '+(stepStatus[row.status]||row.status));option.value=String(row.id);select.append(option)}
+ const index=executionRows.findIndex(r=>r.id===selectedStepId);select.value=String(selectedStepId);$('previousStep').disabled=index<=0;$('nextStep').disabled=index<0||index===executionRows.length-1;
+ const opened=new Set([...$('executionContent').querySelectorAll('details[open]')].map(d=>d.dataset.callId));
+ $('executionContent').replaceChildren(index<0?node('p','当前会话暂无 step 记录。'):metricDetails(executionRows[index]));
+ for(const d of $('executionContent').querySelectorAll('details'))d.open=opened.has(d.dataset.callId);
+}
+$('executionOpen').onclick=()=>openExecution();$('closeExecution').onclick=()=>$('executionDialog').close();
+$('stepSelect').onchange=()=>{selectedStepId=Number($('stepSelect').value);refreshExecution()};
+for(const [id,delta] of [['previousStep',-1],['nextStep',1]])$(id).onclick=()=>{const i=executionRows.findIndex(r=>r.id===selectedStepId);const row=executionRows[i+delta];if(row){selectedStepId=row.id;refreshExecution()}};
+function render(state){
+ const sessionChanged=current!==state.session_id;
+ selectedPapers=state.paper_ids||[];current=state.session_id;setBusy(state.busy);
+ $('status').textContent=state.busy?'● 正在执行':'● 已连接';$('error').textContent=state.error||localError;
+ const rows=state.step_metrics||[];executionRows=rows;
+ if(sessionChanged){$('executionDialog').close();selectedStepId=null;lastExecutionKey=''}
+ if($('executionDialog').open)refreshExecution();
+ const key=JSON.stringify([state.session_id,state.messages,rows]);
+ if(key!==lastMessages){
+  lastMessages=key;
+  const feed=$('feed');const nearBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<80;
+  const timeline=[...state.messages.map(m=>({id:m.event_id,kind:'message',value:m})),
+   ...rows.map(row=>({id:row.end_event_id??row.id,kind:'metrics',value:row}))];
+  timeline.sort((a,b)=>a.id-b.id||(a.kind==='message'?-1:1));
+  $('messages').replaceChildren();
+  for(const entry of timeline){
+   if(entry.kind==='metrics'){$('messages').append(stepLine(entry.value));continue}
+   const m=entry.value;const el=document.createElement('article');el.className='message '+m.role;el.dataset.eventId=String(m.event_id);
+   const role=node('div',m.role==='user'?'YOU':'MINI-HARNESS','role');const body=node('div','','bubble');
+   if(m.role==='assistant'){body.classList.add('markdown');body.append(renderMarkdown(m.content,m===state.messages[state.messages.length-1]))}else body.textContent=m.content;
+   el.append(role,body);if(m.citations&&m.citations.length)el.append(citationCards(m.citations));$('messages').append(el);
+  }
+  $('welcome').hidden=state.messages.length>0;
+  if(nearBottom||sessionChanged)feed.scrollTop=feed.scrollHeight;
+ }
+ $('welcome').hidden=state.messages.length>0;
+ $('activity').replaceChildren();for(const text of state.activity.length?state.activity:['等待任务开始']){const li=node('li',text);$('activity').append(li)}
+ document.querySelectorAll('.session').forEach(b=>b.classList.toggle('active',b.dataset.id===current));
+}
 async function history(){const sessions=await api('sessions');const key=JSON.stringify(sessions);if(key===lastSessions)return;lastSessions=key;$('history').replaceChildren();for(const s of sessions){const b=document.createElement('button');b.className='session';b.dataset.id=s.id;b.disabled=busy;const label=document.createElement('div');label.textContent='对话 · '+s.id.slice(0,6);const small=document.createElement('small');small.textContent=new Date(s.modified*1000).toLocaleString('zh-CN',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});b.append(label,small);b.onclick=()=>switchSession(s.id);$('history').append(b)}if(!sessions.length){const p=document.createElement('p');p.style.color='#8b958b';p.textContent='新的故事，从这里开始。';$('history').append(p)}}
 async function switchSession(id=null){if(busy)return;localError='';setBusy(true);try{await api('session',{id});await poll(false)}catch(e){localError=e.message;$('error').textContent=localError;setBusy(false)}}
 async function poll(schedule=true){try{render(await api('state'));await history();await paperLibrary()}catch(e){$('status').textContent='○ 连接已断开';$('error').textContent='无法连接本地服务，请检查启动窗口。'}finally{if(schedule)setTimeout(()=>poll(),900)}}

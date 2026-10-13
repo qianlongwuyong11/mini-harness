@@ -47,6 +47,13 @@ def load_api_key() -> str:
 # ---------------------------------------------------------------------------
 
 
+def normalize_usage(raw):
+    if not isinstance(raw,dict): return None
+    keys=('prompt_tokens','completion_tokens','total_tokens','prompt_cache_hit_tokens','prompt_cache_miss_tokens')
+    values={k:raw[k] for k in keys if type(raw.get(k)) is int and raw[k]>=0}
+    return values or None
+
+
 @dataclass(frozen=True)
 class ToolCall:
     """模型发起的一次工具调用请求。
@@ -74,6 +81,7 @@ class Message:
     reasoning_content: str | None = None
     tool_calls: tuple[ToolCall, ...] = ()
     tool_call_id: str | None = None
+    usage: dict[str, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -184,6 +192,7 @@ class DeepSeekClient:
             content=raw_message.get("content"),
             reasoning_content=raw_message.get("reasoning_content"),
             tool_calls=tuple(tool_calls),
+            usage=normalize_usage(data.get("usage")),
         )
 
     # ---------- 流式方法（与第 01 章相同，用于终端展示） ----------

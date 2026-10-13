@@ -8,6 +8,8 @@ retry、pruner 与 spill 都监听 Context 事件，因此增加或替换策略�
 from __future__ import annotations
 
 import json
+from time import perf_counter
+from .telemetry import metric_scope
 from dataclasses import dataclass, field
 from typing import Any, cast
 from uuid import uuid4
@@ -118,18 +120,19 @@ class Agent:
             if not claimed:
                 break
             self._turn_no += 1
-            self._session.append("turn/start", {"turn": self._turn_no})
+            turn_started = perf_counter()
+            self._turn_event_id = self._session.append("turn/start", {"turn": self._turn_no, "metrics_version": 2}).id
             try:
                 self._run_turn(claimed)
             except Exception as error:
                 self._session.append(
                     "turn/end",
-                    {"turn": self._turn_no, "reason": "error", "message": str(error)},
+                    {"turn": self._turn_no, "reason": "error", "message": str(error), "elapsed_ms": (perf_counter()-turn_started)*1000},
                 )
                 raise
             else:
                 self._session.append(
-                    "turn/end", {"turn": self._turn_no, "reason": "completed"}
+                    "turn/end", {"turn": self._turn_no, "reason": "completed", "elapsed_ms": (perf_counter()-turn_started)*1000}
                 )
         return self._session
 
@@ -140,7 +143,12 @@ class Agent:
 
             boundary = StepBoundary(self, self._session, self._turn_no, step)
             self._ctx.emit("agent/pre-step", boundary)
-            self._session.append("step/start", {"turn": self._turn_no, "step": step})
+            step_started = perf_counter()
+            self._step_event_id = self._session.append("step/start", {
+                "turn": self._turn_no, "step": step, "turn_event_id": self._turn_event_id,
+                "metrics_version": 2,
+            }).id
+            step_error = None
             completed = False
             try:
                 for message in claimed:
@@ -162,8 +170,18 @@ class Agent:
                 else:
                     for call in reply.tool_calls:
                         self._run_tool(call)
+            except Exception as error:
+                step_error = type(error).__name__
+                raise
             finally:
-                self._session.append("step/end", {"turn": self._turn_no, "step": step})
+                self._session.append("step/end", {
+                    "turn": self._turn_no, "step": step,
+                    "turn_event_id": self._turn_event_id, "step_event_id": self._step_event_id,
+                    "elapsed_ms": (perf_counter() - step_started) * 1000,
+                    "status": "error" if step_error else "completed",
+                    "outcome": "error" if step_error else "answer" if completed else "tool_results",
+                    "error_type": step_error,
+                })
 
             if completed and not self._inbox.has_next_step:
                 return
@@ -208,12 +226,24 @@ class Agent:
         self._request_header = fingerprint
 
     def _request_model(self, request: ModelRequest) -> Message:
-        reply = self._client.chat(request.messages, request.tools)
-        if not reply.content and not reply.reasoning_content and not reply.tool_calls:
-            raise EmptyResponseError(
-                "model returned a completed response with no content"
-            )
-        return reply
+        started=perf_counter()
+        reply=None
+        status='error'
+        error_type=None
+        try:
+            reply = self._client.chat(request.messages, request.tools)
+            if not reply.content and not reply.reasoning_content and not reply.tool_calls:
+                raise EmptyResponseError('model returned a completed response with no content')
+            status='ok'
+            return reply
+        except Exception as error:
+            error_type=type(error).__name__
+            raise
+        finally:
+            self._session.append('metrics/model',dict(step=request.step,turn_event_id=getattr(self,'_turn_event_id',None),
+                step_event_id=getattr(self,'_step_event_id',None),model=self._client.MODEL,
+                elapsed_ms=(perf_counter()-started)*1000,status=status,error_type=error_type,
+                usage=reply.usage if reply is not None else None))
 
     def _append_assistant(self, reply: Message) -> None:
         self._session.append(
@@ -238,21 +268,23 @@ class Agent:
             {"call_id": call.id, "name": call.name, "arguments": call.arguments},
         )
         execution = ToolExecution(self, self._session, call)
-        self._ctx.emit("tools/pre-execute", execution)
-        cast(
-            ToolExecution,
-            self._ctx.waterfall("tools/execute", execution, self._execute_tool),
-        )
-        self._ctx.emit("tools/post-execute", execution)
-        self._session.append(
-            "tool/result",
-            {
-                "call_id": call.id,
-                "content": execution.result,
-                "is_error": execution.is_error,
-            },
-        )
-        self._ctx.emit("tools/result", execution)
+        started=perf_counter()
+        error_type=None
+        try:
+            with metric_scope(self._session, turn_event_id=getattr(self,'_turn_event_id',None),
+                    step_event_id=getattr(self,'_step_event_id',None), call_id=call.id):
+                self._ctx.emit("tools/pre-execute", execution)
+                cast(ToolExecution,self._ctx.waterfall("tools/execute", execution, self._execute_tool))
+                self._ctx.emit("tools/post-execute", execution)
+                self._session.append("tool/result", {"call_id":call.id,"content":execution.result,"is_error":execution.is_error})
+                self._ctx.emit("tools/result", execution)
+        except Exception as error:
+            error_type=type(error).__name__
+            raise
+        finally:
+            self._session.append('metrics/tool',dict(call_id=call.id,name=call.name,
+                turn_event_id=getattr(self,'_turn_event_id',None),step_event_id=getattr(self,'_step_event_id',None),
+                elapsed_ms=(perf_counter()-started)*1000,status='error' if error_type or execution.is_error else 'ok',error_type=error_type))
 
     def _execute_tool(self, execution: ToolExecution) -> ToolExecution:
         tool = self._registry.get(execution.call.name)
