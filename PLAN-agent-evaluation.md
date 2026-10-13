@@ -1,10 +1,12 @@
 # mini-harness Agent 端到端评测改造计划
 
-日期：2026-10-13。状态：待实施。本文件只规划改造，不表示已经接入 DeepEval 或上线评测页面。
+日期：2026-10-13。状态：阶段 0 已完成，阶段 1–8 待实施。DeepEval 已在隔离环境验证；尚未接入真实评测运行器或上线评测页面。
 
 ## 1. 目标与结论
 
 建立“数据集 → 真实 Agent 执行 → 完整 step 轨迹 → 自动评分 → 人工复核 → bad case 回归”的本地闭环。沿用当前 Python、SQLite、JSONL、LlamaIndex 和本地 UI；适配 16GB 内存、4GB 显存，不要求 Docker。
+
+阶段 0 实测发现 DeepEval 与当前 Hugging Face 的 click 约束冲突，故使用独立 `.venv-eval` 评分进程，通过 JSON 契约与主环境交换数据；原 `.venv` 保持原版本。详见 [阶段 0 报告](docs/agent-evaluation-stage0.md)。
 
 选择：DeepEval 作为端到端及语义质量评估库；LlamaIndex RetrieverEvaluator 继续计算检索指标；mini-harness 自己负责执行任务、事实日志、本地存储及 UI。框架负责评分能力，不负责替代 Agent loop。
 
@@ -196,7 +198,7 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 
 | 阶段 | 主要文件建议 | 交付与验收 |
 |---|---|---|
-| 0 依赖与契约 | pyproject.toml、evaluation/models.py | DeepEval 可选依赖兼容；锁版本；确认本地记录、不自动上传；固定指标/schema |
+| 0 依赖与契约（已完成） | pyproject.toml、evaluation/models.py | DeepEval 可选依赖兼容；锁版本；确认本地记录、不自动上传；固定指标/schema |
 | 1 轨迹完善 | agent.py、client.py、telemetry.py、evaluation/trace.py | request/step/tool关联完整，真实请求快照及错误码；重试、修复、工具失败均可定位 |
 | 2 RAG 明细 | rag/hybrid.py、adapters/tracing.py、plugin.py、citations.py | 排名分数、read_section及证据注入路径完整；分数不冒充概率 |
 | 3 数据集与任务 | evaluation/dataset.py、store.py、runner.py | JSON/JSONL校验、版本映射、隔离执行、取消/中断/重跑；标准答案不泄漏 |

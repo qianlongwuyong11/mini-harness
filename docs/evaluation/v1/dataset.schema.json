@@ -1,0 +1,311 @@
+{
+  "$defs": {
+    "Budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "max_steps_per_turn": {
+          "default": 10,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Max Steps Per Turn",
+          "type": "integer"
+        },
+        "timeout_seconds": {
+          "default": 120,
+          "minimum": 1,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "max_total_tokens": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Total Tokens"
+        }
+      },
+      "title": "Budgets",
+      "type": "object"
+    },
+    "EvaluationCase": {
+      "additionalProperties": false,
+      "properties": {
+        "case_id": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Case Id",
+          "type": "string"
+        },
+        "category": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Category",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "regression",
+            "heldout"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "scenario": {
+          "minLength": 1,
+          "title": "Scenario",
+          "type": "string"
+        },
+        "turns": {
+          "items": {
+            "$ref": "#/$defs/TurnInput"
+          },
+          "minItems": 1,
+          "title": "Turns",
+          "type": "array"
+        },
+        "expected_behavior": {
+          "minLength": 1,
+          "title": "Expected Behavior",
+          "type": "string"
+        },
+        "answerable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Answerable"
+        },
+        "reference_answer": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Answer"
+        },
+        "key_points": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Key Points",
+          "type": "array"
+        },
+        "gold_evidence": {
+          "items": {
+            "$ref": "#/$defs/GoldenEvidence"
+          },
+          "title": "Gold Evidence",
+          "type": "array"
+        },
+        "tool_constraints": {
+          "$ref": "#/$defs/ToolConstraints"
+        },
+        "budgets": {
+          "$ref": "#/$defs/Budgets"
+        }
+      },
+      "required": [
+        "case_id",
+        "category",
+        "split",
+        "scenario",
+        "turns",
+        "expected_behavior"
+      ],
+      "title": "EvaluationCase",
+      "type": "object"
+    },
+    "GoldenEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "paper_key": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Paper Key",
+          "type": "string"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        },
+        "block_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Block Ids",
+          "type": "array"
+        },
+        "chunk_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Chunk Ids",
+          "type": "array"
+        },
+        "pages": {
+          "items": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Pages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "paper_key",
+        "content_sha256",
+        "pages"
+      ],
+      "title": "GoldenEvidence",
+      "type": "object"
+    },
+    "PaperBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_key": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "title": "Logical Key",
+          "type": "string"
+        },
+        "paper_id": {
+          "minLength": 1,
+          "title": "Paper Id",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "content_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Content Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_key",
+        "paper_id",
+        "version",
+        "content_sha256"
+      ],
+      "title": "PaperBinding",
+      "type": "object"
+    },
+    "ToolConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "respect_selected_scope": {
+          "default": true,
+          "title": "Respect Selected Scope",
+          "type": "boolean"
+        },
+        "required_tools": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "type": "string"
+          },
+          "title": "Required Tools",
+          "type": "array"
+        },
+        "forbidden_tools": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "type": "string"
+          },
+          "title": "Forbidden Tools",
+          "type": "array"
+        }
+      },
+      "title": "ToolConstraints",
+      "type": "object"
+    },
+    "TurnInput": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "minLength": 1,
+          "title": "Input",
+          "type": "string"
+        },
+        "selected_papers": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+            "type": "string"
+          },
+          "title": "Selected Papers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "input",
+        "selected_papers"
+      ],
+      "title": "TurnInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "dataset_id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "papers": {
+      "items": {
+        "$ref": "#/$defs/PaperBinding"
+      },
+      "title": "Papers",
+      "type": "array"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/EvaluationCase"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "cases"
+  ],
+  "title": "EvaluationDataset",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

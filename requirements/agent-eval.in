@@ -1,0 +1,3 @@
+# Install only in .venv-eval; do not combine with RAG extras.
+deepeval==4.2.8
+pydantic==2.14.0

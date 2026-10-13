@@ -23,3 +23,7 @@ dist/
 *.sqlite3-shm
 *.sqlite3-journal
 *.sqlite3.blocks/
+
+# Isolated scoring SDK (conflicts with embedding dependencies)
+.venv-eval/
+.deepeval/

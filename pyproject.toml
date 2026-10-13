@@ -24,6 +24,7 @@ mini-harness-client = "mini_harness.rpc_client:main"
 mini-harness-ui = "mini_harness.ui:main"
 
 [project.optional-dependencies]
+eval-contracts = ["pydantic==2.14.0"]
 rag-embedding = [
     "torch==2.14.1",
     "transformers==5.19.0",

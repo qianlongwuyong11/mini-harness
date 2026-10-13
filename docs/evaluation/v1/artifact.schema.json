@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "relative_path": {
+      "minLength": 1,
+      "title": "Relative Path",
+      "type": "string"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "size_bytes": {
+      "minimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    },
+    "media_type": {
+      "default": "application/json",
+      "minLength": 1,
+      "title": "Media Type",
+      "type": "string"
+    },
+    "redacted": {
+      "default": true,
+      "title": "Redacted",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "relative_path",
+    "sha256",
+    "size_bytes"
+  ],
+  "title": "ArtifactReference",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

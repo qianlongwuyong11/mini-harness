@@ -1,0 +1,1046 @@
+[
+  {
+    "metric_id": "task_success",
+    "label": "任务完成",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "expected_behavior",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "requirement_coverage",
+    "label": "需求覆盖",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "key_points",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "answer_relevance",
+    "label": "回答相关性",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "input",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "answer_correctness",
+    "label": "事实正确性",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "reference_answer",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "faithfulness",
+    "label": "证据忠实度",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "injected_evidence",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "citation_support",
+    "label": "引用支持率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "claim_citation_pairs",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "citation_coverage",
+    "label": "引用覆盖率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "claims_requiring_citations",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "recovery_success",
+    "label": "错误恢复",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "expected_recovery",
+      "actual_output"
+    ],
+    "calculator": "deepeval_or_human",
+    "description": "明确 rubric 后逐例评分；未标注或未评分时不可当成零",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "tool_correctness",
+    "label": "工具调用正确性",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "expected_tools",
+      "trace"
+    ],
+    "calculator": "rules_or_deepeval",
+    "description": "规则或明确参考标准判定",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "argument_correctness",
+    "label": "工具参数正确性",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "tool_constraints",
+      "trace"
+    ],
+    "calculator": "rules_or_deepeval",
+    "description": "规则或明确参考标准判定",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "precondition_satisfied",
+    "label": "前置条件满足率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "preconditions",
+      "trace"
+    ],
+    "calculator": "rules_or_deepeval",
+    "description": "规则或明确参考标准判定",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "citation_validity",
+    "label": "引用结构有效率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "citation_locators",
+      "trace"
+    ],
+    "calculator": "rules_or_deepeval",
+    "description": "规则或明确参考标准判定",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "required_refusal",
+    "label": "应拒答命中率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "answerable",
+      "refusal_labels"
+    ],
+    "calculator": "rules_or_human",
+    "description": "仅在对应标注子集上计算，显示有效分母",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "false_refusal",
+    "label": "可回答题误拒答率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "lower",
+    "requires": [
+      "answerable",
+      "refusal_labels"
+    ],
+    "calculator": "rules_or_human",
+    "description": "仅在对应标注子集上计算，显示有效分母",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "scope_violations",
+    "label": "范围违规数",
+    "scope": "case",
+    "unit": "count",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "selected_scope"
+    ],
+    "calculator": "rules",
+    "description": "硬性规则；零违规",
+    "version": "1",
+    "threshold": 0,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "invalid_citations",
+    "label": "无效引用数",
+    "scope": "case",
+    "unit": "count",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "selected_scope"
+    ],
+    "calculator": "rules",
+    "description": "硬性规则；零违规",
+    "version": "1",
+    "threshold": 0,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "recall_at_1",
+    "label": "证据召回率@1",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "recall_at_3",
+    "label": "证据召回率@3",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "recall_at_5",
+    "label": "证据召回率@5",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "hit_at_1",
+    "label": "证据命中@1",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "hit_at_3",
+    "label": "证据命中@3",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "hit_at_5",
+    "label": "证据命中@5",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "mrr_at_1",
+    "label": "首个相关结果倒数排名@1",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "mrr_at_3",
+    "label": "首个相关结果倒数排名@3",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "mrr_at_5",
+    "label": "首个相关结果倒数排名@5",
+    "scope": "rag",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "ranked_ids",
+      "gold_evidence"
+    ],
+    "calculator": "llamaindex",
+    "description": "每次查询在前 K 个结果计算；跨调用覆盖另算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "injected_gold_coverage",
+    "label": "实际上下文证据覆盖率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "gold_evidence",
+      "evidence_flow"
+    ],
+    "calculator": "rules",
+    "description": "相关证据集合去重后计算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "case_gold_coverage",
+    "label": "跨调用证据覆盖率",
+    "scope": "case",
+    "unit": "ratio",
+    "direction": "higher",
+    "requires": [
+      "gold_evidence",
+      "evidence_flow"
+    ],
+    "calculator": "rules",
+    "description": "相关证据集合去重后计算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "steps",
+    "label": "Step 数",
+    "scope": "turn",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "trace"
+    ],
+    "calculator": "telemetry",
+    "description": "包括实际重试与修复调用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "model_calls",
+    "label": "模型请求数",
+    "scope": "turn",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "trace"
+    ],
+    "calculator": "telemetry",
+    "description": "包括实际重试与修复调用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "tool_calls",
+    "label": "工具调用数",
+    "scope": "turn",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "trace"
+    ],
+    "calculator": "telemetry",
+    "description": "包括实际重试与修复调用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "retries",
+    "label": "重试数",
+    "scope": "turn",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "trace"
+    ],
+    "calculator": "telemetry",
+    "description": "包括实际重试与修复调用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "citation_repairs",
+    "label": "引用修复数",
+    "scope": "turn",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "trace"
+    ],
+    "calculator": "telemetry",
+    "description": "包括实际重试与修复调用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "redundant_calls",
+    "label": "重复无效调用率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "policy"
+    ],
+    "calculator": "rules",
+    "description": "展示分母及失败分类",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "budget_exceeded",
+    "label": "预算超限率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "policy"
+    ],
+    "calculator": "rules",
+    "description": "展示分母及失败分类",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "execution_errors",
+    "label": "执行错误率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "policy"
+    ],
+    "calculator": "rules",
+    "description": "展示分母及失败分类",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "judge_errors",
+    "label": "评分错误率",
+    "scope": "run",
+    "unit": "ratio",
+    "direction": "lower",
+    "requires": [
+      "trace",
+      "policy"
+    ],
+    "calculator": "rules",
+    "description": "展示分母及失败分类",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "turn_elapsed_ms",
+    "label": "turn 耗时",
+    "scope": "turn",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing"
+    ],
+    "calculator": "telemetry",
+    "description": "单调时钟墙钟时间；嵌套耗时不重复加总",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "step_elapsed_ms",
+    "label": "step 耗时",
+    "scope": "step",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing"
+    ],
+    "calculator": "telemetry",
+    "description": "单调时钟墙钟时间；嵌套耗时不重复加总",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "model_elapsed_ms",
+    "label": "model 耗时",
+    "scope": "model",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing"
+    ],
+    "calculator": "telemetry",
+    "description": "单调时钟墙钟时间；嵌套耗时不重复加总",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "tool_elapsed_ms",
+    "label": "tool 耗时",
+    "scope": "tool",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing"
+    ],
+    "calculator": "telemetry",
+    "description": "单调时钟墙钟时间；嵌套耗时不重复加总",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "rag_elapsed_ms",
+    "label": "rag 耗时",
+    "scope": "rag",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing"
+    ],
+    "calculator": "telemetry",
+    "description": "单调时钟墙钟时间；嵌套耗时不重复加总",
+    "version": "1",
+    "threshold": null,
+    "implementation": "existing"
+  },
+  {
+    "metric_id": "p50_ms",
+    "label": "耗时中位数",
+    "scope": "run",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing_samples"
+    ],
+    "calculator": "telemetry",
+    "description": "按配置、冷热状态分组并显示样本量",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "p95_ms",
+    "label": "耗时 P95",
+    "scope": "run",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing_samples"
+    ],
+    "calculator": "telemetry",
+    "description": "按配置、冷热状态分组并显示样本量",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "queue_ms",
+    "label": "排队耗时",
+    "scope": "run",
+    "unit": "ms",
+    "direction": "lower",
+    "requires": [
+      "timing_samples"
+    ],
+    "calculator": "telemetry",
+    "description": "按配置、冷热状态分组并显示样本量",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "throughput",
+    "label": "吞吐",
+    "scope": "run",
+    "unit": "cases/s",
+    "direction": "higher",
+    "requires": [
+      "completed_cases",
+      "wall_time"
+    ],
+    "calculator": "telemetry",
+    "description": "完成数除以运行墙钟时间",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "agent_input_tokens",
+    "label": "agent input token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "agent_output_tokens",
+    "label": "agent output token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "agent_cached_input_tokens",
+    "label": "agent cached_input token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "agent_cost",
+    "label": "agent 费用",
+    "scope": "run",
+    "unit": "currency",
+    "direction": "observe",
+    "requires": [
+      "provider_usage",
+      "price_version",
+      "currency"
+    ],
+    "calculator": "pricing",
+    "description": "Agent 与 judge 分开；缺失价格或 usage 显示不可计算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "judge_input_tokens",
+    "label": "judge input token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "judge_output_tokens",
+    "label": "judge output token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "judge_cached_input_tokens",
+    "label": "judge cached_input token",
+    "scope": "run",
+    "unit": "tokens",
+    "direction": "observe",
+    "requires": [
+      "provider_usage"
+    ],
+    "calculator": "telemetry",
+    "description": "来自 API；缺失不估填；缓存 token 是输入子集",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "judge_cost",
+    "label": "judge 费用",
+    "scope": "run",
+    "unit": "currency",
+    "direction": "observe",
+    "requires": [
+      "provider_usage",
+      "price_version",
+      "currency"
+    ],
+    "calculator": "pricing",
+    "description": "Agent 与 judge 分开；缺失价格或 usage 显示不可计算",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "peak_rss_bytes",
+    "label": "峰值内存",
+    "scope": "run",
+    "unit": "bytes",
+    "direction": "lower",
+    "requires": [
+      "process_samples"
+    ],
+    "calculator": "telemetry",
+    "description": "Python 与 ES 分开采样",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "returned_evidence",
+    "label": "返回证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "accepted_evidence",
+    "label": "接受证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "injected_evidence",
+    "label": "注入证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "cited_evidence",
+    "label": "引用证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "deduplicated_evidence",
+    "label": "去重证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "budget_omitted_evidence",
+    "label": "预算排除证据数",
+    "scope": "step",
+    "unit": "count",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow"
+    ],
+    "calculator": "telemetry",
+    "description": "各阶段记录，不把去重与预算排除混合",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "evidence_budget_ratio",
+    "label": "证据预算占用率",
+    "scope": "step",
+    "unit": "ratio",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow",
+      "budget"
+    ],
+    "calculator": "telemetry",
+    "description": "明确分母，分母为零时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "deduplication_ratio",
+    "label": "去重率",
+    "scope": "step",
+    "unit": "ratio",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow",
+      "budget"
+    ],
+    "calculator": "telemetry",
+    "description": "明确分母，分母为零时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "budget_omission_ratio",
+    "label": "预算排除率",
+    "scope": "step",
+    "unit": "ratio",
+    "direction": "observe",
+    "requires": [
+      "evidence_flow",
+      "budget"
+    ],
+    "calculator": "telemetry",
+    "description": "明确分母，分母为零时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "bm25_score",
+    "label": "BM25 分数",
+    "scope": "rag",
+    "unit": "score",
+    "direction": "observe",
+    "requires": [
+      "candidate_scores"
+    ],
+    "calculator": "retriever",
+    "description": "不是概率；未启用该通道时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "vector_score",
+    "label": "向量分数",
+    "scope": "rag",
+    "unit": "score",
+    "direction": "observe",
+    "requires": [
+      "candidate_scores"
+    ],
+    "calculator": "retriever",
+    "description": "不是概率；未启用该通道时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "rrf_score",
+    "label": "RRF 分数",
+    "scope": "rag",
+    "unit": "score",
+    "direction": "observe",
+    "requires": [
+      "candidate_scores"
+    ],
+    "calculator": "retriever",
+    "description": "不是概率；未启用该通道时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  },
+  {
+    "metric_id": "rerank_score",
+    "label": "重排分数",
+    "scope": "rag",
+    "unit": "score",
+    "direction": "observe",
+    "requires": [
+      "candidate_scores"
+    ],
+    "calculator": "retriever",
+    "description": "不是概率；未启用该通道时不适用",
+    "version": "1",
+    "threshold": null,
+    "implementation": "planned"
+  }
+]
