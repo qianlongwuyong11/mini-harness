@@ -71,6 +71,7 @@ class RetryPolicy:
         turn: int,
         step: int,
         error: Exception,
+        identity: dict | None = None,
         before_wait: Callable[[Session], None] | None = None,
     ) -> bool:
         """若错误符合策略，先记 scheduled，再等待并记 started。"""
@@ -91,6 +92,7 @@ class RetryPolicy:
                 event
                 for event in reversed(session.events)
                 if event.type == "llm/retry"
+                and (identity is None or event.data.get("step_event_id") == identity.get("step_event_id"))
                 and event.data.get("turn") == turn
                 and event.data.get("step") == step
                 and event.data.get("provider") == self.provider
@@ -115,6 +117,7 @@ class RetryPolicy:
         session.append(
             "llm/retry",
             {
+                **(identity or {}),
                 "retry_id": retry_id,
                 "turn": turn,
                 "step": step,
@@ -132,7 +135,7 @@ class RetryPolicy:
         self.sleeper(delay_ms / 1000)
         session.append(
             "llm/retry-started",
-            {"retry_id": retry_id, "turn": turn, "step": step, "retry": retry},
+            {**(identity or {}),"retry_id": retry_id, "turn": turn, "step": step, "retry": retry},
         )
         return True
 

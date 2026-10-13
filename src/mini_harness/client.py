@@ -82,6 +82,7 @@ class Message:
     tool_calls: tuple[ToolCall, ...] = ()
     tool_call_id: str | None = None
     usage: dict[str, int] | None = None
+    provider_request_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -164,6 +165,8 @@ class DeepSeekClient:
                 }
                 for tool in tools
             ]
+        from .evaluation.trace import capture_wire_payload
+        capture_wire_payload(payload)
         with httpx.Client(timeout=60) as client:
             response = client.post(
                 f"{self.BASE_URL}/chat/completions",
@@ -193,6 +196,7 @@ class DeepSeekClient:
             reasoning_content=raw_message.get("reasoning_content"),
             tool_calls=tuple(tool_calls),
             usage=normalize_usage(data.get("usage")),
+            provider_request_id=data.get("id") if isinstance(data.get("id"),str) else None,
         )
 
     # ---------- 流式方法（与第 01 章相同，用于终端展示） ----------

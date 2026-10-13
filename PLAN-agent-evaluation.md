@@ -1,6 +1,6 @@
 # mini-harness Agent 端到端评测改造计划
 
-日期：2026-10-13。状态：阶段 0 已完成，阶段 1–8 待实施。DeepEval 已在隔离环境验证；尚未接入真实评测运行器或上线评测页面。
+日期：2026-10-13。状态：阶段 0–1 已完成，阶段 2–8 待实施。DeepEval 已在隔离环境验证；尚未接入真实评测运行器或上线评测页面。
 
 ## 1. 目标与结论
 
@@ -199,7 +199,7 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 | 阶段 | 主要文件建议 | 交付与验收 |
 |---|---|---|
 | 0 依赖与契约（已完成） | pyproject.toml、evaluation/models.py | DeepEval 可选依赖兼容；锁版本；确认本地记录、不自动上传；固定指标/schema |
-| 1 轨迹完善 | agent.py、client.py、telemetry.py、evaluation/trace.py | request/step/tool关联完整，真实请求快照及错误码；重试、修复、工具失败均可定位 |
+| 1 轨迹完善（已完成） | agent.py、client.py、telemetry.py、evaluation/trace.py | request/step/tool关联完整，真实请求快照及错误码；重试、修复、工具失败均可定位 |
 | 2 RAG 明细 | rag/hybrid.py、adapters/tracing.py、plugin.py、citations.py | 排名分数、read_section及证据注入路径完整；分数不冒充概率 |
 | 3 数据集与任务 | evaluation/dataset.py、store.py、runner.py | JSON/JSONL校验、版本映射、隔离执行、取消/中断/重跑；标准答案不泄漏 |
 | 4 规则及检索评测 | evaluation/rules.py、metrics.py | 范围/引用/恢复判定；复用现有 LlamaIndex 指标且与历史结果可对照 |
@@ -228,3 +228,5 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 - Phoenix self-hosting：https://arize.com/docs/phoenix/self-hosting
 
 上述来源支持工具能力；本文件的架构、UI、分期和默认并发属于针对 mini-harness 的设计建议。
+
+阶段 1 交付与限制见 [实际执行轨迹报告](docs/agent-evaluation-stage1.md)。

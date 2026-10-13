@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
+from dataclasses import replace
 
 from .agent import ModelRequest, StepBoundary, ToolExecution
 from .checkpoint import CheckpointPolicy
@@ -42,10 +43,12 @@ def retry_plugin(ctx: Context, _config: Any) -> None:
                     turn=request.turn,
                     step=request.step,
                     error=error,
+                    identity={**request.agent._trace_identity(),"model_request_id":request.agent._last_model_request_id},
                     before_wait=lambda session: ctx.emit("checkpoint/retry", session),
                 )
                 if not recovered:
                     raise
+                request=replace(request,purpose="retry",retry_of=request.agent._last_model_request_id)
 
     ctx.on("llm/request", request_with_retry)
 
