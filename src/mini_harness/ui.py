@@ -22,12 +22,20 @@ class Workspace:
         self.root.mkdir(parents=True, exist_ok=True)
         self.factory = factory
         self.papers = papers
+        self.evaluation = None
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ui-agent")
         self.lock = threading.Lock()
         self.agent = None
         self.store = None
         self.unsubscribe = None
         self.state = dict(busy=False, session_id=None, messages=[], activity=[], error=None, paper_ids=[], turn_metrics=[], step_metrics=[])
+
+    def evaluations(self):
+        with self.lock:
+            if self.evaluation is None:
+                from .evaluation.ui_service import EvaluationUI
+                self.evaluation = EvaluationUI(self.root.parent / 'evals', self.papers.runtime if self.papers else None)
+            return self.evaluation
 
     def snapshot(self):
         with self.lock:
@@ -172,6 +180,7 @@ class Workspace:
             self.pool.submit(self._release).result()
         finally:
             self.pool.shutdown(wait=True)
+            if self.evaluation: self.evaluation.close()
             if self.papers: self.papers.close()
 
 
@@ -210,6 +219,28 @@ def make_server(workspace, port=8765):
                 return
             if self.path == "/":
                 self.send(200, template.replace("__UI_TOKEN__", token), "text/html; charset=utf-8")
+            elif self.path in ('/evaluation','/evaluation.js'):
+                file = 'evaluation.html' if self.path=='/evaluation' else 'evaluation.js'
+                content=Path(__file__).with_name(file).read_text(encoding='utf-8').replace('__UI_TOKEN__',token)
+                self.send(200,content,'text/html; charset=utf-8' if file.endswith('.html') else 'application/javascript; charset=utf-8')
+            elif urlsplit(self.path).path.startswith('/api/evaluation/'):
+                try:
+                    service=workspace.evaluations()
+                    action=urlsplit(self.path).path.rsplit('/',1)[-1]
+                    params=parse_qs(urlsplit(self.path).query)
+                    get=lambda key: params[key][0]
+                    if action=='state': result=service.state()
+                    elif action=='run': result=service.reports.run(get('run_id'))
+                    elif action=='case': result=service.reports.case(get('run_id'),get('attempt_id'))
+                    elif action=='compare': result=service.reports.compare(get('baseline'),get('run_id'))
+                    elif action=='export':
+                        content,kind=service.reports.export(get('run_id'),get('format'))
+                        self.send(200,content,kind)
+                        return
+                    else: raise ValueError('未知评测接口')
+                    self.send(200,result)
+                except (ValueError,KeyError,StopIteration,OSError,TypeError):
+                    self.send(400,{'error':'评测数据不可用，请检查运行、用例或本地配置。'})
             elif self.path == "/api/state":
                 self.send(200, workspace.snapshot())
             elif self.path == "/api/sessions":
@@ -233,6 +264,19 @@ def make_server(workspace, port=8765):
 
         def do_POST(self):
             if not self.allowed(api=True):
+                return
+            if self.path.startswith('/api/evaluation/'):
+                try:
+                    self.connection.settimeout(30)
+                    size=int(self.headers.get('Content-Length','0'))
+                    if not 0<size<=10*1024*1024: raise ValueError('请求为空或超过 10 MiB')
+                    data=json.loads(self.rfile.read(size))
+                    if not isinstance(data,dict): raise ValueError('需要 JSON 对象')
+                    result=workspace.evaluations().action(self.path.rsplit('/',1)[-1],data)
+                    self.send(200,result)
+                except RuntimeError as error: self.send(409,{'error':str(error)})
+                except (ValueError,KeyError,StopIteration,OSError,TypeError) as error:
+                    self.send(400,{'error':str(error) if isinstance(error,ValueError) else '评测数据不可用'})
                 return
             if self.path == '/api/papers/upload':
                 try:

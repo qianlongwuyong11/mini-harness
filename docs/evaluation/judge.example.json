@@ -1,0 +1,11 @@
+{
+  "model": "deepseek-chat",
+  "base_url": "https://api.deepseek.com",
+  "api_key_env": "DEEPSEEK_API_KEY",
+  "metrics": ["task_success", "answer_relevance", "answer_correctness", "requirement_coverage", "faithfulness", "tool_correctness"],
+  "thresholds": {},
+  "request_timeout": 45,
+  "process_timeout": 180,
+  "max_calls": 12,
+  "max_output_tokens": 2048
+}

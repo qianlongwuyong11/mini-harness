@@ -1,6 +1,6 @@
 # mini-harness Agent 端到端评测改造计划
 
-日期：2026-10-13。状态：阶段 0–4 已完成，阶段 5–8 待实施。DeepEval 已在隔离环境验证；已接入真实 Agent loop 的评测任务运行器，已接入规则与检索评分，语义评分和评测页面尚未上线。
+日期：2026-10-14。状态：阶段 0–7 已完成；阶段 8 工程实现已完成，人工审定、真实重复运行及质量验收待完成。基准生成器、66f807 回归场景、重复运行报告和验收手册已交付，不能将本地测试通过等同于业务质量达标。
 
 ## 1. 目标与结论
 
@@ -203,10 +203,10 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 | 2 RAG 明细 | rag/hybrid.py、adapters/tracing.py、plugin.py、citations.py | 排名分数、read_section及证据注入路径完整；分数不冒充概率 |
 | 3 数据集与任务 | evaluation/dataset.py、store.py、runner.py | JSON/JSONL校验、版本映射、隔离执行、取消/中断/重跑；标准答案不泄漏 |
 | 4 规则及检索评测（已完成） | evaluation/rules.py、metrics.py | 范围/引用/恢复判定；复用现有 LlamaIndex 指标且与历史结果可对照 |
-| 5 DeepEval 适配 | evaluation/deepeval_adapter.py、judge.py | 最终答案、工具、语义评分；单轮/多轮分开；judge 失败可仅重评分 |
-| 6 UI 执行入口 | ui.py、ui.html或拆分静态资源 | 选文件夹/文件、预览、开始、进度、取消、历史、运行前问题提示 |
-| 7 UI 诊断比较 | 同上及 report.py | 所有已实现指标由注册表展示，可下钻 step；原文、评分理由、基线比较、导出 |
-| 8 基准与回归 | datasets/agent/、docs/agent-eval-runbook.md | 人工审定用例/阈值；66f807覆盖；重复运行与独立新数据集报告 |
+| 5 DeepEval 适配（已完成） | evaluation/deepeval_adapter.py、judge.py、scoring.py | 最终答案、工具、语义评分；单轮/多轮分开；judge 失败可仅重评分 |
+| 6 UI 执行入口（已完成） | ui.py、evaluation.html、evaluation.js、evaluation/ui_service.py | 选文件夹/文件、预览、开始、进度、取消、历史、运行前问题提示 |
+| 7 UI 诊断比较（已完成） | 同上及 evaluation/report.py | 注册表指标、step 明细、原文入口、评分理由、基线比较、导出、人工复核 |
+| 8 基准与回归（工程完成，人工/真实验收待完成） | evaluation/benchmark.py、datasets/agent/、docs/agent-eval-runbook.md | 版本绑定草稿、66f807覆盖、重复运行汇总及缺失验收拦截；人工审定和真实运行仍待执行 |
 
 实施时使用确定性 fixture 验证运行器与数据关联，真实模型小批验证评测适配；真实运行需预算和数据范围明确。单元测试通过、页面可用、评测管线可跑、Agent质量达标四者分别汇报。
 
@@ -235,3 +235,5 @@ Step 详情标签：输入快照、模型输出、工具详情、RAG 候选、�
 阶段 3 交付与运行方式见 [数据集与任务报告](docs/agent-evaluation-stage3.md)。
 
 阶段 4 交付与指标口径见 [规则与检索评分报告](docs/agent-evaluation-stage4.md)。
+
+阶段 5 的配置、评分边界与重评分命令见 [DeepEval 适配报告](docs/agent-evaluation-stage5.md)。

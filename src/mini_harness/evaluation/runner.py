@@ -27,10 +27,11 @@ class EvaluationWorker:
     Network clients must use bounded request timeouts (DeepSeekClient: 60s).
     Cancellation/deadline is cooperative; a running synchronous call is not killed.
     """
-    def __init__(self, store, client_factory, runtime=None):
+    def __init__(self, store, client_factory, runtime=None, *, allow_judge_api=False):
         self.store = store
         self.client_factory = client_factory
         self.runtime = runtime
+        self.allow_judge_api = allow_judge_api
         self._stop = threading.Event()
         self._thread = None
         self.error = None
@@ -54,20 +55,22 @@ class EvaluationWorker:
         if self._thread is not None:
             self._thread.join()
 
-    def work(self, *, wait=False):
+    def work(self, *, wait=False, run_id=None):
         with self.store.worker_lock():
             self.store.recover()
             while not self._stop.is_set():
-                run_id = self.store.claim()
-                if run_id is None:
+                claimed = self.store.claim(run_id)
+                if claimed is None:
                     if not wait:
                         return
                     self._stop.wait(0.2)
                     continue
                 try:
-                    self._run(run_id)
+                    self._run(claimed)
                 except Exception as error:
-                    self.store.finish_run(run_id, "failed", type(error).__name__)
+                    self.store.finish_run(claimed, "failed", type(error).__name__)
+                if run_id is not None:
+                    return
 
     def _bindings(self, dataset):
         if dataset.papers and self.runtime is None:
@@ -76,6 +79,9 @@ class EvaluationWorker:
 
     def _run(self, run_id):
         configuration = json.loads(self.store.get_run(run_id)["configuration"])
+        judge_config = configuration.get("judge") if self.store.get_run(run_id)["mode"] == "live_judge" else None
+        if judge_config and not self.allow_judge_api:
+            raise ValueError("This run requires explicit judge API authorization")
         catalog = configuration.get("catalog")
         if catalog is not None and (self.runtime is None or Path(self.runtime.config.catalog_path).resolve() != Path(catalog).resolve()):
             raise ValueError("Worker catalog differs from the queued configuration")
@@ -90,6 +96,11 @@ class EvaluationWorker:
             if case.case_id in completed:
                 continue
             status = self._case(run_id, dataset, case)
+            if status == "completed" and judge_config:
+                from .scoring import SemanticScorer
+                attempt = self.store.attempts(run_id)[-1]
+                SemanticScorer(self.store, judge_config, allow_api=True).score(attempt,
+                    cancelled=lambda: self._stop.is_set() or self.store.get_run(run_id)["status"] == "cancelling")
             if status == "interrupted":
                 self.store.finish_run(run_id, "interrupted", "worker_stopped")
                 return

@@ -85,6 +85,8 @@ def _catalog():
     from dataclasses import replace
     implemented = {"scope_violations", "invalid_citations", "citation_validity", "case_gold_coverage", "injected_gold_coverage"}
     rows = [replace(row, implementation="implemented") if row.metric_id in implemented else row for row in rows]
+    semantic = {"task_success", "answer_relevance", "answer_correctness", "requirement_coverage", "faithfulness", "tool_correctness"}
+    rows = [replace(row, implementation="implemented", calculator="deepeval") if row.metric_id in semantic else row for row in rows]
     return MappingProxyType({r.metric_id:r for r in rows})
 
 METRICS = _catalog()

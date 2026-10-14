@@ -38,6 +38,10 @@ class EvaluationStore:
                     attempt_id TEXT NOT NULL, metric_id TEXT NOT NULL, target_id TEXT NOT NULL,
                     metric_version TEXT NOT NULL, data TEXT NOT NULL,
                     PRIMARY KEY(attempt_id,metric_id,target_id,metric_version));
+                CREATE TABLE IF NOT EXISTS score_attempts (
+                    score_id TEXT PRIMARY KEY, attempt_id TEXT NOT NULL,
+                    configuration TEXT NOT NULL, status TEXT NOT NULL,
+                    report_ref TEXT, error_type TEXT, started_at REAL NOT NULL, ended_at REAL);
                 CREATE INDEX IF NOT EXISTS attempts_run ON case_attempts(run_id,case_id);
             """)
 
@@ -86,18 +90,21 @@ class EvaluationStore:
             handle.close()
 
     def enqueue(self, dataset, configuration=None, *, mode="live_rules"):
-        if mode != "live_rules":
-            raise ValueError("Stage 3 supports execution only; judge/rescore are not implemented")
+        if mode not in ("live_rules", "live_judge"):
+            raise ValueError("Use rescore on an existing completed attempt")
         dataset = EvaluationDataset.model_validate(dataset.model_dump())
         snapshot = dataset.model_dump(mode="json")
         config = configuration or {}
+        if mode == "live_judge":
+            from .scoring import JudgeConfig
+            config = {**config, "judge": JudgeConfig.model_validate(config.get("judge", {})).model_dump(mode="json")}
         digest = fingerprint(snapshot)
         identity = uuid4().hex
         now = time.time()
         with self.connection() as db:
             db.execute("INSERT OR IGNORE INTO datasets VALUES (?,?)", (digest, canonical(snapshot)))
-            db.execute("INSERT INTO runs(run_id,dataset_sha256,configuration,configuration_sha256,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?)",
-                       (identity, digest, canonical(config), fingerprint(config), "queued", now, now))
+            db.execute("INSERT INTO runs(run_id,dataset_sha256,configuration,configuration_sha256,status,created_at,updated_at,mode) VALUES (?,?,?,?,?,?,?,?)",
+                       (identity, digest, canonical(config), fingerprint(config), "queued", now, now, mode))
         return identity
 
     def get_run(self, run_id):
@@ -132,6 +139,7 @@ class EvaluationStore:
         """Caller MUST hold worker_lock; never interrupt another active worker."""
         self._require_worker()
         with self.connection() as db:
+            db.execute("UPDATE score_attempts SET status='interrupted',error_type='WorkerInterrupted',ended_at=? WHERE status='running'", (time.time(),))
             db.execute("UPDATE case_attempts SET status='interrupted',error_type='WorkerInterrupted',ended_at=? WHERE status='running'", (time.time(),))
             db.execute("UPDATE runs SET status='interrupted',reason=COALESCE(reason,'worker_interrupted'),updated_at=? WHERE status IN ('running','cancelling')", (time.time(),))
 
@@ -139,11 +147,11 @@ class EvaluationStore:
         if self._worker_thread != threading.get_ident():
             raise RuntimeError("Operation requires the live worker lock")
 
-    def claim(self):
+    def claim(self, run_id=None):
         self._require_worker()
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
-            row = db.execute("SELECT run_id FROM runs WHERE status='queued' ORDER BY created_at,rowid LIMIT 1").fetchone()
+            row = db.execute("SELECT run_id FROM runs WHERE status='queued' AND (? IS NULL OR run_id=?) ORDER BY created_at,rowid LIMIT 1", (run_id, run_id)).fetchone()
             if row is None:
                 return None
             db.execute("UPDATE runs SET status='running',updated_at=? WHERE run_id=?", (time.time(), row[0]))
@@ -182,3 +190,20 @@ class EvaluationStore:
     def metrics(self, attempt_id):
         with self.connection() as db:
             return [json.loads(row[0]) for row in db.execute("SELECT data FROM metric_results WHERE attempt_id=? ORDER BY metric_id,target_id", (attempt_id,))]
+
+    def start_score(self, score_id, attempt_id, config):
+        self._require_worker()
+        with self.connection() as db:
+            if db.execute("SELECT 1 FROM case_attempts WHERE attempt_id=?", (attempt_id,)).fetchone() is None:
+                raise KeyError(attempt_id)
+            db.execute("INSERT INTO score_attempts(score_id,attempt_id,configuration,status,started_at) VALUES (?,?,?,'running',?)",
+                       (score_id, attempt_id, canonical(config), time.time()))
+
+    def finish_score(self, score_id, status, ref, error_type=None):
+        with self.connection() as db:
+            db.execute("UPDATE score_attempts SET status=?,report_ref=?,error_type=?,ended_at=? WHERE score_id=?",
+                       (status, canonical(ref), error_type, time.time(), score_id))
+
+    def scores(self, attempt_id):
+        with self.connection() as db:
+            return [dict(row) for row in db.execute("SELECT * FROM score_attempts WHERE attempt_id=? ORDER BY started_at", (attempt_id,))]
