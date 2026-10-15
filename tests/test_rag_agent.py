@@ -14,6 +14,69 @@ from mini_harness.rag.models import Evidence,PageSpan,SourceKind,SourceBlock,Blo
 
 
 class PaperAgentTests(unittest.TestCase):
+    def test_request_projection_deduplicates_and_expires_without_rewriting_session(self):
+        from mini_harness.rag.projection import project_results
+        ctx=Context()
+        owner=self
+        class Client:
+            MODEL='fixture'
+            calls=0
+            def chat(inner,messages,tools):
+                inner.calls+=1
+                if inner.calls==1:
+                    return Message('assistant',tool_calls=(ToolCall('search','search_papers',json.dumps(dict(query='scale',paper_ids=['p']))),))
+                results=[m for m in messages if m.role=='tool']
+                owner.assertEqual(len(results),1)
+                owner.assertEqual(results[0].tool_call_id,'search')
+                if inner.calls==2:
+                    payloads=[m for m in messages if (m.content or '').startswith('本轮证据快照')]
+                    owner.assertEqual(len(payloads),1)
+                    owner.assertEqual(sum((m.content or '').count(owner.e.excerpt) for m in messages),1)
+                    item=json.loads(payloads[0].content.split('\n',1)[1])[0]
+                    summary=json.loads(results[0].content)
+                    owner.assertEqual(summary['evidence_ids'],[item['evidence_id']])
+                    return Message('assistant','Answer [cite:'+item['evidence_id']+']')
+                owner.assertEqual(json.loads(results[0].content)['status'],'historical')
+                owner.assertFalse(any((m.content or '').startswith('本轮证据快照') for m in messages))
+                owner.assertFalse(any(owner.e.excerpt in (m.content or '') for m in messages))
+                owner.assertTrue(any('：[]。' in (m.content or '') for m in messages))
+                return Message('assistant','请在论文库重新勾选论文。')
+        ctx.plugin(headless_bundle,BundleConfig(settings_document={},client=Client(),enable_rag=True,
+            rag_runtime=self.runtime,enable_knowledge_base=False))
+        self.addCleanup(ctx.dispose)
+        agent=ctx.require('agent')
+        ctx.require('paper_scope')['paper_ids']=('p',)
+        agent.followup('Read method');agent.run(max_turns=1)
+        original=next(e for e in agent.session.events if e.type=='tool/result')
+        self.assertEqual(json.loads(original.data['content'])['evidence'][0]['excerpt'],self.e.excerpt)
+        ctx.require('paper_scope')['paper_ids']=()
+        agent.followup('取消勾选');agent.run(max_turns=2)
+        self.assertEqual(original,next(e for e in agent.session.events if e.type=='tool/result'))
+        self.assertFalse(any((e.data.get('content') or '').startswith('本轮证据快照') for e in agent.session.events))
+        # A restored session has no live ledger/cache; old tool bodies still expire.
+        from mini_harness.session import Session
+        restored=Session.from_log(agent.session.events)
+        projected=project_results(restored.derive_messages(),{})
+        self.assertFalse(any(self.e.excerpt in (m.content or '') for m in projected))
+
+    def test_projection_handles_spilled_results_errors_and_non_rag_tools(self):
+        from mini_harness.rag.projection import project_results
+        msgs=[Message('assistant',tool_calls=(ToolCall('x','search_papers','{}'),)),
+              Message('tool','large truncated preview and spill path',tool_call_id='x'),
+              Message('assistant',tool_calls=(ToolCall('other','calculator','{}'),)),
+              Message('tool','42',tool_call_id='other')]
+        summary=dict(status='ok',evidence_ids=['e'],count=1)
+        projected=project_results(msgs,{'x':summary})
+        self.assertEqual(json.loads(projected[1].content),summary)
+        self.assertEqual(projected[2:],msgs[2:])
+        self.assertEqual(msgs[1].content,'large truncated preview and spill path')
+        self.assertEqual(project_results(msgs,{'x':None}),msgs)
+        # Reused call IDs do not make the old result current again.
+        repeated=msgs[:2]+msgs[:2]
+        projected=project_results(repeated,{'x':summary})
+        self.assertEqual(json.loads(projected[1].content)['status'],'historical')
+        self.assertEqual(json.loads(projected[3].content),summary)
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
