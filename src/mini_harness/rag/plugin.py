@@ -50,6 +50,25 @@ def rag_consumer(ctx: Context, _config=None):
         '禁止由局部片段断言全文没有提及、只有某项记录或全文未披露。证据不支持问题时原样回答：'+FALLBACK
     )
     ctx.effect(lambda: ctx.prompt.section('paper-rag',prompt,order=70))
+    ctx.effect(lambda: ctx.prompt.section('paper-selection-status',
+        'list_papers returns a structured status and papers. '
+        'For no_paper_selected, tell the user to select the paper checkbox in the paper library. '
+        'This does not mean the library is empty. Do not suggest uploading again or supplying an ID/version as a substitute for selecting a paper. '
+        'For selected_papers_unavailable, ask the user to refresh the library and select an available paper. '
+        'Only library_empty means the unfiltered library has no papers; uploading is appropriate then. '
+        'Use the language of the user question.', order=71))
+
+    def list_papers(_args):
+        selected = selection['paper_ids']
+        # An explicitly empty selection is known without examining other papers.
+        if selected is not None and not selected:
+            return json.dumps(dict(status='no_paper_selected', papers=[],
+                next_action='select_paper',
+                message='No paper is selected for this conversation. Select the paper checkbox in the paper library; supplying an ID or uploading again does not change this selection.'),ensure_ascii=False)
+        papers = [p for p in runtime.list_papers() if selected is None or p['paper_id'] in selected]
+        status = 'ok' if papers else 'library_empty' if selected is None else 'selected_papers_unavailable'
+        action = 'search_papers' if papers else 'upload_paper' if selected is None else 'refresh_and_select_paper'
+        return json.dumps(dict(status=status,papers=papers,next_action=action),ensure_ascii=False)
 
     def scope(args):
         ids = args.get('paper_ids',[])
@@ -120,7 +139,7 @@ def rag_consumer(ctx: Context, _config=None):
     definitions = [
         Tool('list_papers','列出论文、版本和是否可检索；不暴露文件路径。',
              {'type':'object','properties':{},'additionalProperties':False},
-             lambda _: json.dumps([p for p in runtime.list_papers() if selection['paper_ids'] is None or p['paper_id'] in selection['paper_ids']],ensure_ascii=False)),
+             list_papers),
         Tool('search_papers','检索选定论文的作者原文，返回带引用 ID 的证据。',
              {'type':'object','properties':{'query':{'type':'string'},'paper_ids':{'type':'array','items':{'type':'string'},'minItems':1},'top_k':{'type':'integer','minimum':1,'maximum':100}},'required':['query','paper_ids'],'additionalProperties':False},search),
         Tool('read_section','按精确版本和章节路径补读原文；批注需显式选择 user_annotation。',

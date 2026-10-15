@@ -161,7 +161,19 @@ class PaperAgentTests(unittest.TestCase):
             tools=ctx.require('tools')
             with self.assertRaises(ValueError):tools.get('search_papers').execute({'query':'q','paper_ids':['p']})
             with self.assertRaises(ValueError):tools.get('read_section').execute({'paper_id':'p','version':'v','section_path':['Method']})
-            self.assertEqual(json.loads(tools.get('list_papers').execute({})),[])
+            listing=json.loads(tools.get('list_papers').execute({}))
+            self.assertEqual(listing['status'],'no_paper_selected')
+            self.assertEqual(listing['next_action'],'select_paper')
+            self.assertEqual(listing['papers'],[])
+            ctx.require('paper_scope')['paper_ids']=('p',)
+            listing=json.loads(tools.get('list_papers').execute({}))
+            self.assertEqual(listing['status'],'ok')
+            self.assertEqual([p['paper_id'] for p in listing['papers']],['p'])
+            ctx.require('paper_scope')['paper_ids']=('unavailable',)
+            self.assertEqual(json.loads(tools.get('list_papers').execute({}))['status'],'selected_papers_unavailable')
+            ctx.require('paper_scope')['paper_ids']=None
+            self.runtime.list_papers=lambda: []
+            self.assertEqual(json.loads(tools.get('list_papers').execute({}))['status'],'library_empty')
         finally:ctx.dispose()
 
     def test_stage2_decision_reasons_are_distinct(self):
