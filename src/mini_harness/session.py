@@ -76,6 +76,7 @@ class Session:
     """一次对话的全部历史：一条只追加的事件日志。"""
 
     def __init__(self) -> None:
+        self.session_id: str | None = None
         self._log: list[SessionEvent] = []
         self._snapshot: tuple[SessionEvent, ...] | None = None
         self._listeners: list[Any] = []

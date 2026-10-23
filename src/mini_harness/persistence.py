@@ -13,11 +13,12 @@ import json
 import os
 import time
 from pathlib import Path
+from uuid import uuid4, uuid5, NAMESPACE_URL
 
 from .session import Session, SessionEvent
 
 HEADER_FORMAT = "mini-harness-jsonl"
-HEADER_VERSION = 1
+HEADER_VERSION = 2
 TOOL_OUTCOME_UNKNOWN = "TOOL_OUTCOME_UNKNOWN"
 
 
@@ -26,6 +27,7 @@ class JsonlStore:
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
+        self._session_id: str | None = None
 
     # ------------------------------------------------------------------
     # 保存：首次原子发布，之后只追加
@@ -35,7 +37,8 @@ class JsonlStore:
         """首次用临时文件原子发布，之后只追加尚未落盘的事件。"""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if not self.path.exists():
-            lines = [_header_line(), *(_event_line(event) for event in session.events)]
+            session.session_id = session.session_id or uuid4().hex
+            lines = [_header_line(session.session_id), *(_event_line(event) for event in session.events)]
             tmp_path = self.path.with_name(self.path.name + ".tmp")
             with tmp_path.open("w", encoding="utf-8") as file:
                 file.write("\n".join(lines) + "\n")
@@ -45,6 +48,9 @@ class JsonlStore:
             return
 
         persisted, torn_offset = self._read_records()
+        if session.session_id is not None and session.session_id != self._session_id:
+            raise ValueError("session identity differs from persisted file")
+        session.session_id = self._session_id
         if torn_offset is not None:
             raise ValueError("会话文件存在残缺尾行；请先 load() 修复后再保存")
         current = session.events
@@ -85,7 +91,9 @@ class JsonlStore:
         # 崩溃可能恰好发生在完整行写完之后，因此即使没有 torn tail，
         # 也要根据已持久化事件检查开放状态。
         _append_recovery_closers(events)
-        return Session.from_log(events)
+        session = Session.from_log(events)
+        session.session_id = self._session_id
+        return session
 
     def _read_records(self) -> tuple[list[SessionEvent], int | None]:
         """读取完整行。只有最后一个未换行片段可以按崩溃尾部修复。"""
@@ -108,10 +116,19 @@ class JsonlStore:
             header = json.loads(complete_lines[0])
         except json.JSONDecodeError as error:
             raise ValueError("会话文件 header 不是合法 JSON") from error
-        if not isinstance(header, dict) or set(header) != {"format", "version"}:
+        if not isinstance(header, dict):
             raise ValueError(f"无法识别的会话文件头: {header}")
-        if header["format"] != HEADER_FORMAT or header["version"] != HEADER_VERSION:
+        version = header.get("version")
+        expected = {"format", "version"} if version == 1 else {"format", "version", "session_id"}
+        if set(header) != expected or header.get("format") != HEADER_FORMAT or version not in {1, 2}:
             raise ValueError(f"无法识别的会话文件头: {header}")
+        if version == 2:
+            identity = header["session_id"]
+            if not isinstance(identity, str) or not identity.strip():
+                raise ValueError("invalid persisted session_id")
+            self._session_id = identity
+        else:
+            self._session_id = uuid5(NAMESPACE_URL, self.path.resolve().as_uri()).hex
 
         events: list[SessionEvent] = []
         for line_number, line in enumerate(complete_lines[1:], start=2):
@@ -130,9 +147,9 @@ class JsonlStore:
         return list(Session.from_log(events).events), torn_offset
 
 
-def _header_line() -> str:
+def _header_line(session_id: str) -> str:
     return json.dumps(
-        {"format": HEADER_FORMAT, "version": HEADER_VERSION}, ensure_ascii=False
+        {"format": HEADER_FORMAT, "version": HEADER_VERSION, "session_id": session_id}, ensure_ascii=False
     )
 
 

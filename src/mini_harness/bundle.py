@@ -60,6 +60,8 @@ class BundleConfig:
     enable_rag: bool = False
     rag_catalog_path: str = ".mini-harness/rag/vector-catalog.sqlite3"
     rag_runtime: Any = None
+    session_id: str | None = None
+    memory_config: Any = None
 
 
 def session_provider(ctx: Context, session: Session | None) -> None:
@@ -113,6 +115,7 @@ def agent_provider(ctx: Context, _config: Any) -> None:
         prompt,
         variables={"name": "小知"},
         session=session,
+        session_id=_config,
     )
     ctx.provide("agent", agent)
 
@@ -153,6 +156,11 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
 
         ctx.plugin(rag_plugin, config.rag_runtime or config.rag_catalog_path)
     ctx.plugin(shell_provider)
+    if config.memory_config is not None:
+        # 默认关闭时不加载记忆插件或供应商适配器。
+        from .memory.plugin import memory_plugin
+
+        ctx.plugin(memory_plugin, config.memory_config)
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)
     ctx.plugin(skills_consumer)
@@ -171,4 +179,4 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
     ctx.plugin(interaction_consumer)
     ctx.plugin(delegation_consumer)
     ctx.plugin(rpc_provider)
-    ctx.plugin(agent_provider)
+    ctx.plugin(agent_provider, config.session_id)

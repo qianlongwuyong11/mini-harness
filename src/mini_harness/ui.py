@@ -136,7 +136,8 @@ class Workspace:
         store = JsonlStore(self.root / f"{identifier}.jsonl")
         session = store.load() if session_id else Session()
         factory = self.factory or build_agent
-        options=dict(session=session,checkpoint_flush=store.save,enable_console_questions=False)
+        options=dict(session=session,session_id=session.session_id or identifier,
+                     checkpoint_flush=store.save,enable_console_questions=False)
         if self.papers is not None and self.factory is None:
             options['rag_runtime']=self.papers.runtime
         agent = factory(**options)

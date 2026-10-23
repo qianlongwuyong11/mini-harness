@@ -101,7 +101,10 @@ class Agent:
         self._turn_no = 0
         self._request_header: str | None = None
         self.id = f"agent-{uuid4().hex}"
-        self.session_id = session_id or uuid4().hex
+        if session_id is not None and self._session.session_id is not None and session_id != self._session.session_id:
+            raise ValueError("session_id conflicts with restored session")
+        self.session_id = session_id or self._session.session_id or uuid4().hex
+        self._session.session_id = self.session_id
         self.rpc_dispatcher: RpcDispatcher | None = None
 
     def followup(self, content: str) -> None:
