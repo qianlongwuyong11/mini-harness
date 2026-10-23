@@ -171,9 +171,9 @@ class Agent:
             completed = False
             try:
                 for message in claimed:
-                    self._session.append("user/message", {"content": message.content})
+                    self._session.append("user/message", {"content": message.content, "source": "user_input"})
                 for notice in boundary.notices:
-                    self._session.append("user/message", {"content": notice})
+                    self._session.append("user/message", {"content": notice, "source": "internal_notice"})
 
                 request = self._assemble_request(step)
                 self._ctx.emit("agent/prepare-request", request)
@@ -312,6 +312,7 @@ class Agent:
                 **self._trace_identity(),
                 "model_request_id": self._last_model_request_id,
                 "content": reply.content,
+                "source": "assistant_final" if not reply.tool_calls else "assistant_tool_call",
                 **(
                     {"reasoning_content": reply.reasoning_content}
                     if reply.reasoning_content
