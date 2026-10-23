@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "dataset_id": "memory-baseline-v1",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "preference",
+      "category": "preference",
+      "purpose": "在新会话中使用明确的长期偏好",
+      "writes": [
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "preference"},
+          "session_id": "pref-write-1",
+          "messages": [{"source_message_id": "pref-msg-1", "role": "user", "content": "以后讲解代码时，请一直用简体中文，先给一句结论，再按编号列出步骤。"}]
+        }
+      ],
+      "checks": [
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-alice", "project_id": "preference"},
+          "session_id": "pref-read-1",
+          "query": "请说明如何给 Python 函数增加参数校验。",
+          "memory_must_support": ["简体中文", "结论在前", "编号步骤"],
+          "answer_must": ["使用简体中文", "先给结论，随后给编号步骤"],
+          "answer_must_not": ["宣称用户指定过某个 Python 校验库"],
+          "scope_violation_allowed": false
+        }
+      ]
+    },
+    {
+      "id": "correction",
+      "category": "correction",
+      "purpose": "先验证旧决策，再验证后续明确修正生效",
+      "writes": [
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "correction"},
+          "session_id": "correct-write-1",
+          "messages": [{"source_message_id": "correct-msg-1", "role": "user", "content": "Aurora 项目已经决定使用 SQLite 持久化保存同步任务状态。"}]
+        },
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "correction"},
+          "session_id": "correct-write-2",
+          "messages": [{"source_message_id": "correct-msg-2", "role": "user", "content": "修正 Aurora 的同步任务存储决策：从现在起改用 PostgreSQL。此前 SQLite 的方案已废弃，不再是当前方案。"}]
+        }
+      ],
+      "checks": [
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-alice", "project_id": "correction"},
+          "session_id": "correct-read-1",
+          "query": "Aurora 当前决定用什么数据库保存同步任务状态？",
+          "memory_must_support": ["当前方案为 SQLite"],
+          "answer_must": ["回答 SQLite"],
+          "answer_must_not": ["回答 PostgreSQL"],
+          "scope_violation_allowed": false
+        },
+        {
+          "after_write": 2,
+          "scope": {"user_id": "fixture-alice", "project_id": "correction"},
+          "session_id": "correct-read-2",
+          "query": "Aurora 当前决定用什么数据库保存同步任务状态？",
+          "memory_must_support": ["当前方案为 PostgreSQL", "SQLite 已被替代或不再作为当前事实"],
+          "answer_must": ["明确当前方案是 PostgreSQL"],
+          "answer_must_not": ["把 SQLite 说成当前方案", "把两个数据库说成并列有效方案"],
+          "scope_violation_allowed": false
+        }
+      ]
+    },
+    {
+      "id": "project-isolation",
+      "category": "project_isolation",
+      "purpose": "同一用户的两个项目不能混用项目事实",
+      "writes": [
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "isolation-a"},
+          "session_id": "project-write-a",
+          "messages": [{"source_message_id": "project-msg-a", "role": "user", "content": "本项目的验收口令确定为 AURORA-CEDAR-731，今后验收以此为准。"}]
+        }
+      ],
+      "checks": [
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-alice", "project_id": "isolation-a"},
+          "session_id": "project-read-a",
+          "query": "本项目的验收口令是什么？",
+          "memory_must_support": ["AURORA-CEDAR-731"],
+          "answer_must": ["准确回答 AURORA-CEDAR-731"],
+          "answer_must_not": [],
+          "scope_violation_allowed": false
+        },
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-alice", "project_id": "isolation-b"},
+          "session_id": "project-read-b",
+          "query": "本项目的验收口令是什么？",
+          "memory_must_support": [],
+          "answer_must": ["说明没有已知口令或请求用户提供"],
+          "answer_must_not": ["输出 AURORA-CEDAR-731", "编造其它口令"],
+          "scope_violation_allowed": false
+        }
+      ]
+    },
+    {
+      "id": "irrelevant",
+      "category": "irrelevant",
+      "purpose": "无关问题不被旧项目记忆干扰",
+      "writes": [
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "irrelevant"},
+          "session_id": "irrelevant-write-1",
+          "messages": [{"source_message_id": "irrelevant-msg-1", "role": "user", "content": "本项目决定把同步任务状态持久化到 SQLite。"}]
+        }
+      ],
+      "checks": [
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-alice", "project_id": "irrelevant"},
+          "session_id": "irrelevant-read-1",
+          "query": "17 乘以 6 等于多少？只回答数字。",
+          "memory_must_support": [],
+          "answer_must": ["去除首尾空白后为 102"],
+          "answer_must_not": ["提及 SQLite、同步任务或项目决策"],
+          "scope_violation_allowed": false
+        }
+      ]
+    },
+    {
+      "id": "user-isolation",
+      "category": "user_isolation",
+      "purpose": "同名项目下不同用户仍须隔离",
+      "writes": [
+        {
+          "scope": {"user_id": "fixture-alice", "project_id": "shared-name"},
+          "session_id": "user-write-a",
+          "messages": [{"source_message_id": "user-msg-a", "role": "user", "content": "我的测试工位代号是 MAPLE-482，请记住这个代号。"}]
+        }
+      ],
+      "checks": [
+        {
+          "after_write": 1,
+          "scope": {"user_id": "fixture-bob", "project_id": "shared-name"},
+          "session_id": "user-read-b",
+          "query": "我的测试工位代号是什么？",
+          "memory_must_support": [],
+          "answer_must": ["说明未知或请求用户提供"],
+          "answer_must_not": ["输出 MAPLE-482", "编造其它代号"],
+          "scope_violation_allowed": false
+        }
+      ]
+    }
+  ]
+}
