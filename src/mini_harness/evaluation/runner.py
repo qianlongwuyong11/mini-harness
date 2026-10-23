@@ -123,17 +123,12 @@ class EvaluationWorker:
             safe = Session.from_log([replace(e, data=redact(dict(e.data), traces.secrets)) for e in current.events])
             journal.save(safe)
 
-        def boundary(*_, before_request=False):
+        def boundary(*_):
             if self._stop.is_set() or self.store.get_run(run_id)["status"] == "cancelling":
                 raise EvaluationStopped("cancelled or worker stopped")
             if time.monotonic() - started >= case.budgets.timeout_seconds:
                 raise TimeoutError("Case deadline exceeded at a safe boundary")
-            limit = case.budgets.max_total_tokens
-            if limit is not None:
-                if missing_usage:
-                    raise RuntimeError("Token budget cannot be enforced: provider usage missing")
-                if used_tokens > limit or (before_request and used_tokens >= limit):
-                    raise RuntimeError("Case token budget exhausted")
+            # Cumulative usage is telemetry, not a multi-turn failure condition.
             self._bindings(dataset)  # Detect active-version changes during execution.
 
         try:
@@ -144,7 +139,7 @@ class EvaluationWorker:
                 MODEL = raw_client.MODEL
                 def chat(inner, messages, tools):
                     nonlocal used_tokens, missing_usage
-                    boundary(before_request=True)
+                    boundary()
                     reply = raw_client.chat(messages, tools)
                     usage = reply.usage or {}
                     total = usage.get("total_tokens")

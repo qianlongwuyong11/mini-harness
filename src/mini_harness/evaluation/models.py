@@ -37,6 +37,7 @@ class TurnInput(Contract):
 class Budgets(Contract):
     max_steps_per_turn: Annotated[int, Field(ge=1, le=100)] = 10
     timeout_seconds: Annotated[int, Field(ge=1)] = 120
+    # Legacy dataset compatibility only; cumulative usage is no longer enforced.
     max_total_tokens: Annotated[int, Field(ge=1)] | None = None
 
 class ToolConstraints(Contract):

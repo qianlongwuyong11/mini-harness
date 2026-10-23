@@ -113,8 +113,12 @@ class EvaluationQueueTests(unittest.TestCase):
         run2 = self.store.enqueue(dataset(turns=2, max_total_tokens=5))
         c = Client()
         EvaluationWorker(self.store, lambda: c).work()
-        self.assertEqual(len(c.messages), 1)
-        self.assertEqual(self.store.get_run(run2)["status"], "failed")
+        self.assertEqual(len(c.messages), 2)
+        self.assertEqual(self.store.get_run(run2)["status"], "completed")
+        from mini_harness.evaluation.report import Reports
+        report = Reports(self.store).run(run2)["cases"][0]["report"]
+        self.assertEqual(report["total_tokens"], 10)
+        self.assertTrue(report["usage_complete"])
 
     def test_mismatch_before_model_and_mode_rejection(self):
         from types import SimpleNamespace

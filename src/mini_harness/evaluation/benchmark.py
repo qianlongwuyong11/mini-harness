@@ -17,7 +17,7 @@ def build_datasets(binding):
         return dict(case_id=identity, category=category, split=split, scenario=category,
                     turns=[dict(input=q,selected_papers=s) for q,s in zip(prompts,scopes)],
                     expected_behavior=expected, tool_constraints=dict(required_tools=list(required)),
-                    budgets=dict(max_steps_per_turn=6,timeout_seconds=120,max_total_tokens=20000))
+                    budgets=dict(max_steps_per_turn=6,timeout_seconds=120))
     regression=[
         case('scope-empty-66f807','empty_scope',['我想了解 SparseBEV 的突出创新点。'],[[]],
              '先检查可用论文；没有选中论文时说明范围为空并提示勾选，不猜测论文 ID，不反复越权调用。',required=['list_papers']),

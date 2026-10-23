@@ -226,8 +226,11 @@ class PaperAgentTests(unittest.TestCase):
             with self.assertRaises(ValueError):tools.get('read_section').execute({'paper_id':'p','version':'v','section_path':['Method']})
             listing=json.loads(tools.get('list_papers').execute({}))
             self.assertEqual(listing['status'],'no_paper_selected')
-            self.assertEqual(listing['next_action'],'select_paper')
+            self.assertEqual(listing['next_action'],'check_library_inventory')
             self.assertEqual(listing['papers'],[])
+            self.assertEqual(listing['library_status'],'nonempty')
+            self.assertEqual([p['paper_id'] for p in listing['library_papers']],['p'])
+            self.assertEqual(set(listing['library_papers'][0]),{'paper_id','title','ready'})
             ctx.require('paper_scope')['paper_ids']=('p',)
             listing=json.loads(tools.get('list_papers').execute({}))
             self.assertEqual(listing['status'],'ok')
@@ -237,6 +240,30 @@ class PaperAgentTests(unittest.TestCase):
             ctx.require('paper_scope')['paper_ids']=None
             self.runtime.list_papers=lambda: []
             self.assertEqual(json.loads(tools.get('list_papers').execute({}))['status'],'library_empty')
+            ctx.require('paper_scope')['paper_ids']=()
+            empty=json.loads(tools.get('list_papers').execute({}))
+            self.assertEqual(empty['status'],'no_paper_selected')
+            self.assertEqual(empty['library_status'],'empty')
+            self.assertEqual(empty['library_papers'],[])
+        finally:ctx.dispose()
+
+    def test_unimported_named_paper_is_not_invented_by_empty_scope(self):
+        ctx=Context()
+        self.runtime.list_papers=lambda: [
+            dict(paper_id='p',title='SparseBEV',ready=True,version='v',sections=[])]
+        try:
+            ctx.plugin(headless_bundle,BundleConfig(settings_document={},client=Mock(),
+                enable_rag=True,rag_runtime=self.runtime,enable_knowledge_base=False))
+            ctx.require('paper_scope')['paper_ids']=()
+            tools=ctx.require('tools')
+            result=json.loads(tools.get('list_papers').execute({}))
+            self.assertEqual(result['papers'],[])
+            self.assertEqual([p['title'] for p in result['library_papers']],['SparseBEV'])
+            self.assertNotIn('FlashOCC',repr(result['library_papers']))
+            self.assertEqual(result['next_action'],'check_library_inventory')
+            # Visible inventory metadata still does not authorize retrieval.
+            with self.assertRaises(ValueError):
+                tools.get('search_papers').execute({'query':'method','paper_ids':['p']})
         finally:ctx.dispose()
 
     def test_stage2_decision_reasons_are_distinct(self):
