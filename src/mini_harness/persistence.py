@@ -95,6 +95,15 @@ class JsonlStore:
         session.session_id = self._session_id
         return session
 
+    def read_snapshot(self) -> Session:
+        """只读取已完整落盘的快照；拒绝残缺尾行，不修复或合成事件。"""
+        events, torn_offset = self._read_records()
+        if torn_offset is not None:
+            raise ValueError("Incomplete log tail; restore the session before syncing")
+        session = Session.from_log(events)
+        session.session_id = self._session_id
+        return session
+
     def _read_records(self) -> tuple[list[SessionEvent], int | None]:
         """读取完整行。只有最后一个未换行片段可以按崩溃尾部修复。"""
         raw_bytes = self.path.read_bytes()
