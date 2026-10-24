@@ -18,12 +18,21 @@ class MemoryReader(Protocol):
 class MemoryPluginConfig:
     backend: MemoryReader
     scope: MemoryScope
+    auto_recall: bool = False
+    memory_tokens: int = 800
+
+    def __post_init__(self):
+        if type(self.memory_tokens) is not int or self.memory_tokens < 0:
+            raise ValueError("memory_tokens must be a nonnegative integer")
 
 
 @depends("tools", "prompt")
 def memory_plugin(ctx: Context, config: MemoryPluginConfig) -> None:
     if not isinstance(config, MemoryPluginConfig):
         raise ValueError("MemoryPluginConfig required")
+    if config.auto_recall:
+        from .projection import memory_projection
+        ctx.plugin(memory_projection, config)
 
     def validate(args, allowed, required):
         if not isinstance(args, dict) or set(args) - allowed or required - set(args):
