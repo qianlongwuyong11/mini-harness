@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import threading
 from pathlib import Path
 from uuid import uuid4, uuid5, NAMESPACE_URL
 
@@ -28,12 +29,30 @@ class JsonlStore:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self._session_id: str | None = None
+        self.save_lock = threading.RLock()
+        self._saved_listeners = []
 
     # ------------------------------------------------------------------
     # 保存：首次原子发布，之后只追加
     # ------------------------------------------------------------------
 
+    def subscribe_saved(self, listener):
+        """Short notification after successful fsync; listener must not do IO."""
+        with self.save_lock:
+            self._saved_listeners.append(listener)
+        def unsubscribe():
+            with self.save_lock:
+                if listener in self._saved_listeners:
+                    self._saved_listeners.remove(listener)
+        return unsubscribe
+
     def save(self, session: Session) -> None:
+        with self.save_lock:
+            self._save(session)
+            for listener in tuple(self._saved_listeners):
+                listener()
+
+    def _save(self, session: Session) -> None:
         """首次用临时文件原子发布，之后只追加尚未落盘的事件。"""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if not self.path.exists():

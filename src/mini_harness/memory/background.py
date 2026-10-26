@@ -48,7 +48,7 @@ class MemoryBackgroundRunner:
     never forcibly close another thread's backend or database.
     """
     def __init__(self, db_path, backend_factory, *, target_id, scope,
-                 poll_interval=1.0, lease_seconds=300, heartbeat_interval=30):
+                 poll_interval=1.0, lease_seconds=300, heartbeat_interval=30, before_scan=None):
         for value in (poll_interval,lease_seconds,heartbeat_interval):
             MemoryJobStore._lease_duration(value)
         if heartbeat_interval >= lease_seconds/2:
@@ -62,6 +62,7 @@ class MemoryBackgroundRunner:
         self._stop=threading.Event(); self._wake=threading.Event()
         self._lock=threading.Lock(); self._thread=None
         self.last_error=None
+        self.before_scan=before_scan
 
     def start(self):
         with self._lock:
@@ -95,6 +96,8 @@ class MemoryBackgroundRunner:
                     # Clear before scan: a notification during scan remains visible.
                     self._wake.clear()
                     try:
+                        if self.before_scan is not None:
+                            self.before_scan(store)
                         result=worker.run_once()
                         if result.outcome == "yielded":
                             try: store.defer_poll(result.job,seconds=self.poll_interval)

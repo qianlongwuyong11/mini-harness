@@ -44,6 +44,7 @@ def build_agent(
     session_id: str | None = None,
     rag_runtime=None,
     memory_config=None,
+    memory_sync_config=None,
 ) -> Agent:
     """创建 Context 并挂载 headless Bundle；能力由插件依赖自动接线。"""
     ctx = Context()
@@ -58,6 +59,7 @@ def build_agent(
             enable_rag=rag_runtime is not None,
             rag_runtime=rag_runtime,
             memory_config=memory_config,
+            memory_sync_config=memory_sync_config,
         ),
     )
     return cast(Agent, ctx.require("agent"))

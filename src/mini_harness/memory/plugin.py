@@ -20,8 +20,14 @@ class MemoryPluginConfig:
     scope: MemoryScope
     auto_recall: bool = False
     memory_tokens: int = 800
+    scope_version: str = "1"
+    recall_cache_size: int = 64
 
     def __post_init__(self):
+        if not isinstance(self.scope_version,str) or not self.scope_version.strip():
+            raise ValueError("scope_version must be nonempty")
+        if type(self.recall_cache_size) is not int or not 1 <= self.recall_cache_size <= 1024:
+            raise ValueError("recall_cache_size must be between 1 and 1024")
         if type(self.memory_tokens) is not int or self.memory_tokens < 0:
             raise ValueError("memory_tokens must be a nonnegative integer")
 

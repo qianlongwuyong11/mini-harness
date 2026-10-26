@@ -263,9 +263,15 @@ class MemoryJobStore:
             deadline = now + lease_seconds
             if not math.isfinite(deadline):
                 raise ValueError("Lease deadline overflow")
-            row = self._db.execute("""SELECT job_id FROM memory_jobs
+            row = self._db.execute("""SELECT job_id FROM memory_jobs AS candidate
                 WHERE target_id=? AND user_id=? AND project_id=? AND lease_owner IS NULL
                   AND state IN ('pending','appended','polling') AND next_run_at<=?
+                  AND NOT EXISTS (SELECT 1 FROM memory_jobs AS prior
+                      WHERE prior.target_id=candidate.target_id
+                        AND prior.user_id=candidate.user_id AND prior.project_id=candidate.project_id
+                        AND prior.session_id=candidate.session_id
+                        AND prior.event_start < candidate.event_start
+                        AND prior.state NOT IN ('completed','cancelled'))
                 ORDER BY created_at,rowid LIMIT 1""",
                 (target_id,scope.user_id,scope.project_id,now)).fetchone()
             if row is None:

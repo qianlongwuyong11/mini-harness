@@ -62,6 +62,7 @@ class BundleConfig:
     rag_runtime: Any = None
     session_id: str | None = None
     memory_config: Any = None
+    memory_sync_config: Any = None
 
 
 def session_provider(ctx: Context, session: Session | None) -> None:
@@ -161,6 +162,9 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
         from .memory.plugin import memory_plugin
 
         ctx.plugin(memory_plugin, config.memory_config)
+    if config.memory_sync_config is not None:
+        from .memory.automatic import automatic_memory_plugin
+        ctx.plugin(automatic_memory_plugin, config.memory_sync_config)
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)
     ctx.plugin(skills_consumer)
