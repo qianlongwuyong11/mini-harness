@@ -62,10 +62,16 @@ class MemoryWorker:
         return self.store.save_progress(job.job_id, expected_revision=job.revision,
                                         lease=job, state=state, **fields)
 
+    def _invoke(self, job, operation, *args):
+        return _call(operation, *args)
+
+    def _claim(self):
+        return self.store.claim_next(self.worker_id,target_id=self.target_id,
+                                     scope=self.scope,lease_seconds=self.lease_seconds)
+
     def run_once(self) -> WorkerResult:
         self.store.recover_expired(target_id=self.target_id,scope=self.scope)
-        job = self.store.claim_next(self.worker_id,target_id=self.target_id,
-                                   scope=self.scope,lease_seconds=self.lease_seconds)
+        job = self._claim()
         if job is None:
             return WorkerResult("idle",None)
         stage = "restore"
@@ -75,14 +81,14 @@ class MemoryWorker:
                     if not job.remote_session_id or (job.state == JobState.POLLING and not job.remote_task_id):
                         raise _RemoteFailure(MemoryErrorCode.INVALID_INPUT)
                     if isinstance(self.backend,ResumableMemoryBackend):
-                        _call(self.backend.restore_binding,self.scope,
+                        self._invoke(job,self.backend.restore_binding,self.scope,
                               job.remote_session_id,job.remote_task_id)
 
                 if job.state == JobState.PENDING:
                     stage = "append"
                     session_id = job.remote_session_id or job.session_id
                     job = self._save(job,JobState.APPENDING,remote_session_id=session_id)
-                    receipt = _call(self.backend.append,self.scope,session_id,job.messages)
+                    receipt = self._invoke(job,self.backend.append,self.scope,session_id,job.messages)
                     if (not isinstance(receipt,AppendResult) or receipt.session_id != session_id
                             or type(receipt.appended_count) is not int
                             or receipt.appended_count != len(job.messages)):
@@ -93,7 +99,7 @@ class MemoryWorker:
                     stage = "commit"
                     job = self.store.heartbeat(job,lease_seconds=self.lease_seconds)
                     job = self._save(job,JobState.COMMITTING)
-                    receipt = _call(self.backend.commit,self.scope,job.remote_session_id)
+                    receipt = self._invoke(job,self.backend.commit,self.scope,job.remote_session_id)
                     if (not isinstance(receipt,CommitResult)
                             or receipt.session_id != job.remote_session_id
                             or receipt.status != "accepted"
@@ -105,7 +111,7 @@ class MemoryWorker:
 
                 stage = "poll"
                 job = self.store.heartbeat(job,lease_seconds=self.lease_seconds)
-                task = _call(self.backend.get_task,self.scope,job.remote_task_id)
+                task = self._invoke(job,self.backend.get_task,self.scope,job.remote_task_id)
                 if (not isinstance(task,MemoryTask) or task.task_id != job.remote_task_id
                         or task.session_id != job.remote_session_id
                         or not isinstance(task.state,TaskState)):

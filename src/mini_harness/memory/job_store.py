@@ -474,3 +474,34 @@ class MemoryJobStore:
     def retry_history(self, job_id: str) -> tuple[dict, ...]:
         return tuple(dict(row) for row in self._db.execute(
             "SELECT * FROM memory_retry_events WHERE job_id=? ORDER BY revision",(job_id,)))
+
+    def renew_inflight(self, expected: MemoryJob, *, lease_seconds: float):
+        """Heartbeat-only extension during a blocked RPC, on a separate connection.
+
+        Does not change revision: no business state changes. Exact owner, generation,
+        revision and live deadline are still checked. Cannot revive an expired lease.
+        """
+        self._lease_duration(lease_seconds)
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            now = self._now()
+            current = self._owned(expected, now)
+            deadline = max(current.lease_expires_at,now+lease_seconds)
+            if not math.isfinite(deadline):
+                raise ValueError("Lease deadline overflow")
+            self._db.execute("UPDATE memory_jobs SET lease_expires_at=? WHERE job_id=?",
+                             (deadline,current.job_id))
+
+    def defer_poll(self, expected: MemoryJob, *, seconds: float):
+        """Delay an unowned yielded poll so it cannot starve other jobs."""
+        self._lease_duration(seconds)
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            current = self.get(expected.job_id)
+            if (current is None or current.revision != expected.revision
+                    or current.lease_owner is not None or current.state != JobState.POLLING):
+                raise StaleJobError("Polling job already changed")
+            deadline=self._now()+seconds
+            if not math.isfinite(deadline): raise ValueError("Deadline overflow")
+            self._db.execute("UPDATE memory_jobs SET next_run_at=?,revision=revision+1 WHERE job_id=?",
+                             (deadline,current.job_id))
