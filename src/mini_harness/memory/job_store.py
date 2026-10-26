@@ -82,7 +82,7 @@ class MemoryJobStore:
                 # Serialize migration as well as concurrent first opens.
                 self._db.execute("BEGIN IMMEDIATE")
                 version = self._db.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2, 3):
+                if version not in (0, 1, 2, 3, 4):
                     raise ValueError("Unsupported memory job schema version")
                 self._db.execute(f"""CREATE TABLE IF NOT EXISTS memory_jobs (
                     job_id TEXT PRIMARY KEY, batch_key TEXT NOT NULL UNIQUE,
@@ -107,7 +107,12 @@ class MemoryJobStore:
                     if name not in columns:
                         self._db.execute(f"ALTER TABLE memory_jobs ADD COLUMN {name} {definition}")
                 self._db.execute("CREATE INDEX IF NOT EXISTS memory_jobs_lease ON memory_jobs(lease_expires_at)")
-                self._db.execute("PRAGMA user_version=3")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS memory_reconciliations (
+                    job_id TEXT NOT NULL, revision INTEGER NOT NULL,
+                    decision TEXT NOT NULL, evidence_ref TEXT NOT NULL,
+                    actor TEXT NOT NULL, created_at REAL NOT NULL,
+                    PRIMARY KEY(job_id,revision))""")
+                self._db.execute("PRAGMA user_version=4")
         except BaseException:
             self._db.close()
             raise
@@ -338,3 +343,58 @@ class MemoryJobStore:
                 (end,prefix_sha256,reason,time.time(),scan_key,expected_end))
             if result.rowcount != 1:
                 raise StaleJobError("Scan cursor moved; reread the saved snapshot")
+
+    def reconcile(self, expected: MemoryJob, *, target_id: str, scope: MemoryScope,
+                  decision: str, evidence_ref: str, actor: str,
+                  remote_task_id: str | None = None) -> MemoryJob:
+        """Trusted operator resolution, NOT a model tool or automatic retry.
+
+        Caller must stop/fence old remote writers and verify the EXACT batch.
+        appended: all messages confirmed pending, no commit in flight.
+        committed: archive/task association verified for this batch.
+        unresolved: insufficient evidence; keep quarantined. cancel: abandon.
+        No reset-to-pending option: absence from current messages is not proof.
+        evidence_ref is a non-secret reference to independently reviewed evidence.
+        """
+        states = {"appended": JobState.APPENDED, "committed": JobState.POLLING,
+                  "unresolved": JobState.AMBIGUOUS, "cancel": JobState.CANCELLED}
+        if decision not in states:
+            raise ValueError("Unsupported reconciliation decision")
+        for value in (evidence_ref, actor):
+            if not isinstance(value, str) or not value.strip() or len(value) > 500:
+                raise ValueError("Nonempty bounded evidence reference and actor required")
+        if decision == "committed":
+            if not isinstance(remote_task_id, str) or not remote_task_id.strip():
+                raise ValueError("Verified task ID required")
+        elif remote_task_id is not None:
+            raise ValueError("Task ID only allowed for committed resolution")
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            current = self.get(expected.job_id)
+            if (current is None or current.revision != expected.revision
+                    or current.target_id != target_id or current.scope != scope
+                    or current.state != JobState.AMBIGUOUS or current.lease_owner is not None):
+                raise StaleJobError("Only current unowned ambiguous job in configured scope can be reconciled")
+            if decision in {"appended", "committed"} and not current.remote_session_id:
+                raise ValueError("Saved remote session required")
+            if decision == "appended" and current.remote_task_id:
+                raise ValueError("Known task must be reconciled as committed")
+            if current.remote_task_id and remote_task_id and current.remote_task_id != remote_task_id:
+                raise ValueError("Cannot replace known remote task")
+            now = self._now()
+            self._db.execute("""UPDATE memory_jobs SET state=?,revision=revision+1,
+                lease_generation=lease_generation+1,lease_expires_at=NULL,
+                remote_task_id=COALESCE(?,remote_task_id),updated_at=?,
+                error_code=?,error_message=? WHERE job_id=?""",
+                (states[decision].value, remote_task_id, now,
+                 current.error_code if decision == "unresolved" else None,
+                 current.error_message if decision == "unresolved" else None, current.job_id))
+            result = self.get(current.job_id)
+            self._db.execute("INSERT INTO memory_reconciliations VALUES (?,?,?,?,?,?)",
+                (current.job_id,result.revision,decision,evidence_ref,actor,now))
+        return result
+
+    def reconciliation_history(self, job_id: str) -> tuple[dict, ...]:
+        """Local audit trail; no raw remote bodies or credentials are stored."""
+        return tuple(dict(row) for row in self._db.execute(
+            "SELECT * FROM memory_reconciliations WHERE job_id=? ORDER BY revision", (job_id,)))
