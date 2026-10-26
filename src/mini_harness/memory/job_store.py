@@ -55,6 +55,9 @@ class MemoryJob:
     lease_owner: str | None
     lease_generation: int
     lease_expires_at: float | None
+    retry_count: int
+    next_run_at: float
+    retry_state: str | None
 
 
 def _json(value):
@@ -82,7 +85,7 @@ class MemoryJobStore:
                 # Serialize migration as well as concurrent first opens.
                 self._db.execute("BEGIN IMMEDIATE")
                 version = self._db.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2, 3, 4):
+                if version not in (0, 1, 2, 3, 4, 5):
                     raise ValueError("Unsupported memory job schema version")
                 self._db.execute(f"""CREATE TABLE IF NOT EXISTS memory_jobs (
                     job_id TEXT PRIMARY KEY, batch_key TEXT NOT NULL UNIQUE,
@@ -103,6 +106,9 @@ class MemoryJobStore:
                     ("lease_owner", "TEXT"),
                     ("lease_generation", "INTEGER NOT NULL DEFAULT 0 CHECK(lease_generation>=0)"),
                     ("lease_expires_at", "REAL"),
+                    ("retry_count", "INTEGER NOT NULL DEFAULT 0"),
+                    ("next_run_at", "REAL NOT NULL DEFAULT 0"),
+                    ("retry_state", "TEXT"),
                 ):
                     if name not in columns:
                         self._db.execute(f"ALTER TABLE memory_jobs ADD COLUMN {name} {definition}")
@@ -112,7 +118,11 @@ class MemoryJobStore:
                     decision TEXT NOT NULL, evidence_ref TEXT NOT NULL,
                     actor TEXT NOT NULL, created_at REAL NOT NULL,
                     PRIMARY KEY(job_id,revision))""")
-                self._db.execute("PRAGMA user_version=4")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS memory_retry_events (
+                    job_id TEXT NOT NULL, revision INTEGER NOT NULL, kind TEXT NOT NULL,
+                    error_code TEXT, actor TEXT, created_at REAL NOT NULL,
+                    PRIMARY KEY(job_id,revision))""")
+                self._db.execute("PRAGMA user_version=5")
         except BaseException:
             self._db.close()
             raise
@@ -138,7 +148,8 @@ class MemoryJobStore:
             row["payload_sha256"], JobState(row["state"]), row["revision"],
             row["remote_session_id"], row["remote_task_id"], row["error_code"],
             row["error_message"], row["created_at"], row["updated_at"],
-            row["lease_owner"], row["lease_generation"], row["lease_expires_at"])
+            row["lease_owner"], row["lease_generation"], row["lease_expires_at"],
+            row["retry_count"], row["next_run_at"], row["retry_state"])
 
     def get(self, job_id: str) -> MemoryJob | None:
         return self._decode(self._db.execute("SELECT * FROM memory_jobs WHERE job_id=?", (job_id,)).fetchone())
@@ -254,9 +265,9 @@ class MemoryJobStore:
                 raise ValueError("Lease deadline overflow")
             row = self._db.execute("""SELECT job_id FROM memory_jobs
                 WHERE target_id=? AND user_id=? AND project_id=? AND lease_owner IS NULL
-                  AND state IN ('pending','appended','polling')
+                  AND state IN ('pending','appended','polling') AND next_run_at<=?
                 ORDER BY created_at,rowid LIMIT 1""",
-                (target_id,scope.user_id,scope.project_id)).fetchone()
+                (target_id,scope.user_id,scope.project_id,now)).fetchone()
             if row is None:
                 return None
             self._db.execute("""UPDATE memory_jobs SET lease_owner=?,
@@ -398,3 +409,68 @@ class MemoryJobStore:
         """Local audit trail; no raw remote bodies or credentials are stored."""
         return tuple(dict(row) for row in self._db.execute(
             "SELECT * FROM memory_reconciliations WHERE job_id=? ORDER BY revision", (job_id,)))
+
+    def record_read_failure(self, expected: MemoryJob, *, error_code: str,
+                            max_retries: int = 3, base_delay: float = 2,
+                            max_delay: float = 60) -> MemoryJob:
+        """Only a failed read of an already-known remote task is safe to retry.
+
+        retry_count counts scheduled automatic retries over this job's lifetime.
+        A running response does not reset it. Remote task failure is not a read error.
+        """
+        if type(max_retries) is not int or not 0 <= max_retries <= 100:
+            raise ValueError("max_retries must be between 0 and 100")
+        self._lease_duration(base_delay)
+        self._lease_duration(max_delay)
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            now = self._now()
+            current = self._owned(expected,now)
+            if current.state != JobState.POLLING or not current.remote_task_id:
+                raise ValueError("Only known-task polling failures may use this path")
+            retry = error_code in {"timeout", "unavailable"} and current.retry_count < max_retries
+            delay = min(max_delay, base_delay * (2 ** min(current.retry_count,100))) if retry else 0
+            if not math.isfinite(now + delay):
+                raise ValueError("Retry deadline overflow")
+            self._db.execute("""UPDATE memory_jobs SET state=?,retry_count=retry_count+?,
+                next_run_at=?,retry_state='polling',error_code=?,error_message=?,
+                revision=revision+1,lease_generation=lease_generation+1,
+                lease_owner=NULL,lease_expires_at=NULL,updated_at=? WHERE job_id=?""",
+                ('polling' if retry else 'failed',int(retry),now+delay,error_code,
+                 'Remote task read failed; retry scheduled' if retry else
+                 'Remote task read failed; inspect before explicit retry',now,current.job_id))
+            result = self.get(current.job_id)
+            self._db.execute("INSERT INTO memory_retry_events VALUES (?,?,?,?,?,?)",
+                (current.job_id,result.revision,'scheduled' if retry else 'failed',error_code,None,now))
+        return result
+
+    def retry_failed(self, expected: MemoryJob, *, target_id: str, scope: MemoryScope,
+                     actor: str) -> MemoryJob:
+        """Explicit one-more-read after operator fixes cause; never resend writes.
+
+        Does not reset lifetime automatic retry budget. No ambiguous/remote failed
+        processing restart: those require reconciliation or a separate reviewed action.
+        """
+        if not isinstance(actor,str) or not actor.strip() or len(actor)>500:
+            raise ValueError("Bounded nonempty actor required")
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            current = self.get(expected.job_id)
+            if (current is None or current.revision != expected.revision
+                    or current.target_id != target_id or current.scope != scope
+                    or current.state != JobState.FAILED or current.lease_owner is not None):
+                raise StaleJobError("Current unowned failed job in configured scope required")
+            if current.retry_state != 'polling' or not current.remote_task_id or current.error_code == 'remote_task_failed':
+                raise ValueError("No proven safe read retry for this failure")
+            now = self._now()
+            self._db.execute("""UPDATE memory_jobs SET state='polling',next_run_at=?,
+                revision=revision+1,lease_generation=lease_generation+1,updated_at=?
+                WHERE job_id=?""",(now,now,current.job_id))
+            result = self.get(current.job_id)
+            self._db.execute("INSERT INTO memory_retry_events VALUES (?,?,?,?,?,?)",
+                (current.job_id,result.revision,'manual',current.error_code,actor,now))
+        return result
+
+    def retry_history(self, job_id: str) -> tuple[dict, ...]:
+        return tuple(dict(row) for row in self._db.execute(
+            "SELECT * FROM memory_retry_events WHERE job_id=? ORDER BY revision",(job_id,)))

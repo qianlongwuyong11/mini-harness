@@ -11,7 +11,7 @@ from .job_store import JobState, MemoryJob, MemoryJobStore, StaleJobError
 
 @dataclass(frozen=True)
 class WorkerResult:
-    outcome: Literal["idle", "yielded", "completed", "failed", "cancelled", "ambiguous", "lease_lost"]
+    outcome: Literal["idle", "yielded", "completed", "failed", "cancelled", "ambiguous", "lease_lost", "retry_scheduled"]
     job: MemoryJob | None
 
 
@@ -40,7 +40,8 @@ class MemoryWorker:
     """
     def __init__(self, store: MemoryJobStore, backend: MemoryBackend, *,
                  target_id: str, scope: MemoryScope, worker_id: str,
-                 lease_seconds: float = 300):
+                 lease_seconds: float = 300, max_retries: int = 3,
+                 retry_base_delay: float = 2, retry_max_delay: float = 60):
         if not isinstance(target_id,str) or not target_id.strip():
             raise ValueError("Nonempty target required")
         if not isinstance(worker_id,str) or not worker_id.strip():
@@ -50,6 +51,12 @@ class MemoryWorker:
         # Same validation as the store, before recovery can mutate any records.
         MemoryJobStore._lease_duration(lease_seconds)
         self.lease_seconds = lease_seconds
+        if type(max_retries) is not int or not 0 <= max_retries <= 100:
+            raise ValueError("max_retries must be between 0 and 100")
+        MemoryJobStore._lease_duration(retry_base_delay)
+        MemoryJobStore._lease_duration(retry_max_delay)
+        self.max_retries = max_retries
+        self.retry_base_delay, self.retry_max_delay = retry_base_delay, retry_max_delay
 
     def _save(self, job, state, **fields):
         return self.store.save_progress(job.job_id, expected_revision=job.revision,
@@ -112,6 +119,11 @@ class MemoryWorker:
                 return WorkerResult("failed",self._save(job,JobState.FAILED,
                     error_code="remote_task_failed",error_message="Remote memory processing failed"))
             except _RemoteFailure as error:
+                if stage == "poll":
+                    job = self.store.record_read_failure(job,error_code=error.code.value,
+                        max_retries=self.max_retries,base_delay=self.retry_base_delay,
+                        max_delay=self.retry_max_delay)
+                    return WorkerResult("retry_scheduled" if job.state == JobState.POLLING else "failed",job)
                 write_uncertain = stage in {"append","commit"} and error.code not in {
                     MemoryErrorCode.INVALID_INPUT,MemoryErrorCode.PERMISSION_DENIED,MemoryErrorCode.NOT_FOUND}
                 state = JobState.AMBIGUOUS if write_uncertain else JobState.FAILED
