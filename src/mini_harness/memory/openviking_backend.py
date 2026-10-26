@@ -158,12 +158,31 @@ class OpenVikingReadBackend:
 
 
 class OpenVikingBackend(OpenVikingReadBackend):
-    """五方法后端；会话/任务登记仅驻留当前实例，不提供崩溃恢复。"""
+    """五方法后端；可从可信持久任务记录恢复本地会话/任务登记。"""
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._sessions: set[str] = set()
         self._tasks: dict[str, str] = {}
+
+    def restore_binding(self, scope: MemoryScope, session_id: str,
+                        task_id: str | None = None) -> None:
+        """Internal runtime hook; IDs must come from a trusted scoped job store.
+
+        Does not query the server or reconcile ambiguous writes. Subsequent task
+        reads still verify task type, resource ID and task ID in the response.
+        """
+        self._check_scope(scope)
+        self._check_id(session_id)
+        if task_id is not None:
+            self._check_id(task_id)
+            previous = self._tasks.get(task_id)
+            if previous is not None and previous != session_id:
+                raise MemoryBackendError(MemoryErrorCode.PERMISSION_DENIED,
+                                         "task already bound to another session")
+        self._sessions.add(session_id)
+        if task_id is not None:
+            self._tasks[task_id] = session_id
 
     @staticmethod
     def _check_id(value: str) -> None:

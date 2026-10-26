@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Protocol
+from typing import Literal, Protocol, runtime_checkable
 
 
 @dataclass(frozen=True)
@@ -129,3 +129,15 @@ class MemoryBackend(Protocol):
     def commit(self, scope: MemoryScope, session_id: str) -> CommitResult: ...
 
     def get_task(self, scope: MemoryScope, task_id: str) -> MemoryTask: ...
+
+
+@runtime_checkable
+class ResumableMemoryBackend(Protocol):
+    """Optional hook for binding trusted durable IDs after recreating an adapter.
+
+    The caller must select the same configured target and scope as the saved job.
+    This restores local bookkeeping only, not proof of a remote write's outcome.
+    """
+
+    def restore_binding(self, scope: MemoryScope, session_id: str,
+                        task_id: str | None = None) -> None: ...
