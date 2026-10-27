@@ -16,6 +16,7 @@ from collections.abc import Mapping, Sequence
 
 from .client import ChatClient, Message, Tool, ToolCall
 from .session import Session
+from .memory.subagent import mark_child_session, snapshot_messages
 from .subagent import CancellationSignal, SubagentResult
 
 
@@ -27,6 +28,9 @@ def run_tool_subagent(
     *,
     max_steps: int = 6,
     cancelled: CancellationSignal | None = None,
+    memory_snapshot=None,
+    memory_scope=None,
+    paper_ids=None,
 ) -> SubagentResult:
     """独立 Session + 受限工具集的子 Agent；复用 SubagentResult 语义。
 
@@ -39,8 +43,12 @@ def run_tool_subagent(
     if not task.strip():
         raise ValueError("task 必须是非空字符串")
 
+    memory_messages = snapshot_messages(memory_snapshot, memory_scope, paper_ids)
+    # Child runs have no memory permission context: do not forward parent memory tools.
+    tools = tuple(tool for tool in tools if not tool.name.startswith('memory_'))
     available = {tool.name: tool for tool in tools}
     session = Session()
+    mark_child_session(session)
     session.append("turn/start", {"turn": 1})
     session.append("user/message", {"content": task})
 
@@ -52,6 +60,7 @@ def run_tool_subagent(
             reply = client.chat(
                 [
                     Message(role="system", content=system_prompt),
+                    *memory_messages,
                     *session.derive_messages(),
                 ],
                 list(tools),

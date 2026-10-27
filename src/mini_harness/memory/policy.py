@@ -30,6 +30,8 @@ def evaluate_turn(session_id: str, events: Sequence[SessionEvent], *,
     messages = capture_messages(session_id, snapshot, start=start, end=end)
     if type(durable_end) is not int or not 0 <= durable_end <= len(snapshot):
         raise ValueError("Invalid durable boundary")
+    if any(e.type == "session/origin" and e.data.get("kind") == "subagent" for e in snapshot):
+        return CaptureDecision("skip", "subagent_session")
     selected = snapshot[start:end]
     if not selected or selected[0].type != "turn/start":
         return CaptureDecision("reject", "missing_turn_start")

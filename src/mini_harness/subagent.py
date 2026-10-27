@@ -20,6 +20,7 @@ from uuid import uuid4
 
 from .client import ChatClient, Message
 from .session import Session
+from .memory.subagent import mark_child_session, snapshot_messages
 
 
 @dataclass(frozen=True)
@@ -55,13 +56,19 @@ def run_subagent(
     max_steps: int = 3,
     session: Session | None = None,
     cancelled: CancellationSignal | None = None,
+    *,
+    memory_snapshot=None,
+    memory_scope=None,
+    paper_ids=None,
 ) -> SubagentResult:
     """运行一个子 agent：独立的 Session，只见 task，不见父历史。
 
     上下文隔离是这里的关键——父 agent 的对话历史可能有几万 token，
     而一个子任务往往只需要一句 task 描述。把历史挡在门外，
     每个子 agent 的输入都从零开始（官方 fork 是例外，见本章对照表）。"""
+    memory_messages = snapshot_messages(memory_snapshot, memory_scope, paper_ids)
     child_session = session or Session()
+    mark_child_session(child_session)
     turn = 1 + sum(1 for event in child_session.events if event.type == "turn/start")
     child_session.append("turn/start", {"turn": turn})
     child_session.append("user/message", {"content": task})
@@ -77,6 +84,7 @@ def run_subagent(
             reply = client.chat(
                 [
                     Message(role="system", content=system_prompt),
+                    *memory_messages,
                     *child_session.derive_messages(),
                 ]
             )
