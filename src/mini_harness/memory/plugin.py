@@ -2,11 +2,13 @@
 
 from dataclasses import asdict, dataclass, replace
 import json
+from time import perf_counter
+from ..telemetry import record_metric
 from typing import Protocol
 
 from ..client import Tool
 from ..cordis import Context, depends
-from .contracts import MemoryDocument, MemoryHit, MemoryScope
+from .contracts import MemoryDocument, MemoryHit, MemoryScope, MemoryBackendError
 from .isolation import memory_allowed, redact_memory_results
 
 
@@ -63,6 +65,20 @@ def memory_plugin(ctx: Context, config: MemoryPluginConfig) -> None:
             if not isinstance(args[name], str) or not args[name].strip():
                 raise ValueError(f"{name} must be nonempty text")
 
+    def measured(kind, operation):
+        started = perf_counter()
+        error_code = None
+        try:
+            return operation()
+        except MemoryBackendError as error:
+            error_code = error.code.value
+            raise
+        except Exception:
+            error_code = 'backend_error'
+            raise
+        finally:
+            record_metric(kind, dict(elapsed_ms=(perf_counter()-started)*1000,error_code=error_code))
+
     def search(args):
         validate(args, {"query", "limit"}, {"query"})
         limit = args.get("limit", 5)
@@ -70,14 +86,14 @@ def memory_plugin(ctx: Context, config: MemoryPluginConfig) -> None:
             raise ValueError("limit must be an integer between 1 and 20")
         if not memory_allowed(ctx):
             return blocked()
-        hits = config.backend.recall(config.scope, args["query"], limit=limit)
+        hits = measured("memory/recall", lambda: config.backend.recall(config.scope, args["query"], limit=limit))
         return json.dumps({"hits": [asdict(hit) for hit in hits]}, ensure_ascii=False)
 
     def read(args):
         validate(args, {"uri"}, {"uri"})
         if not memory_allowed(ctx):
             return blocked()
-        document = config.backend.read(config.scope, args["uri"])
+        document = measured("memory/read", lambda: config.backend.read(config.scope, args["uri"]))
         return json.dumps({"document": asdict(document)}, ensure_ascii=False)
 
     definitions = (

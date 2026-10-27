@@ -165,6 +165,9 @@ def headless_bundle(ctx: Context, config: BundleConfig) -> None:
     if config.memory_sync_config is not None:
         from .memory.automatic import automatic_memory_plugin
         ctx.plugin(automatic_memory_plugin, config.memory_sync_config)
+    if config.memory_config is not None or config.memory_sync_config is not None:
+        from .memory.status import memory_status_plugin
+        ctx.plugin(memory_status_plugin, (config.memory_config, config.memory_sync_config))
     ctx.plugin(shell_consumer)
     ctx.plugin(skills_provider)
     ctx.plugin(skills_consumer)

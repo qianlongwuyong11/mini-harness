@@ -6,6 +6,8 @@ import hashlib
 import threading
 import json
 import logging
+from time import perf_counter
+from ..telemetry import record_metric
 
 from ..client import Message
 from ..meter import estimate_tokens, render_message, TokenMeter
@@ -48,6 +50,11 @@ def memory_projection(ctx, config):
     last_scope = paper_scope_key(ctx)
     def project(request, next_fn):
         nonlocal last_scope
+        started = perf_counter()
+        cache_hit = False
+        def observe(reason, **values):
+            record_metric('memory/observation', dict(reason=reason,
+                elapsed_ms=(perf_counter()-started)*1000,cache_hit=cache_hit,**values))
         scope = paper_scope_key(ctx)
         with lock:
             if scope != last_scope:
@@ -64,9 +71,12 @@ def memory_projection(ctx, config):
         evidence = sum(estimate_tokens(render_message(m)) for m in base
                        if (m.content or "").startswith('本轮证据快照'))
         if used > limit or evidence > config.reference_tokens:
+            observe('input_overflow', input_tokens=used, input_limit=limit,evidence_tokens=evidence)
             raise MemoryBudgetExceeded("Existing request exceeds configured input/reference budget")
         budget = min(config.memory_tokens,limit-used,config.reference_tokens-evidence)
         if budget <= 0 or scope is not None:
+            observe('scope_blocked' if scope is not None else 'no_budget', budget_tokens=max(0,budget),
+                    injected_count=0,injected_tokens=0,input_tokens=used,input_limit=limit,evidence_tokens=evidence)
             return next_fn(request)
         event = next((event for event in reversed(request.session.events)
                       if event.type == 'user/message'
@@ -75,6 +85,7 @@ def memory_projection(ctx, config):
                       and isinstance(event.data.get('content'), str)
                       and event.data['content'].strip()), None)
         if event is None:
+            observe('no_query',injected_count=0,injected_tokens=0,budget_tokens=budget)
             return next_fn(request)
         query = event.data['content']
         session_id = request.session.session_id
@@ -83,18 +94,28 @@ def memory_projection(ctx, config):
             session_id, event.id, config.scope.user_id, config.scope.project_id,
             config.scope_version, hashlib.sha256(query.encode('utf-8')).hexdigest())
         def recall():
+            recall_started = perf_counter()
+            error_code = None
             try:
                 return tuple(config.backend.recall(config.scope, query, limit=5))
             except MemoryBackendError as error:
+                error_code = error.code.value
                 logging.getLogger(__name__).warning('Memory recall skipped: %s', error.code.value)
                 # Cache empty result for this input to avoid a retry/repair storm.
                 return ()
+            except Exception:
+                error_code = 'backend_error'
+                raise
+            finally:
+                record_metric('memory/recall',dict(elapsed_ms=(perf_counter()-recall_started)*1000,
+                                                 error_code=error_code))
         if key is None:
             hits = recall()
         else:
             # Serialize misses for this plugin, including concurrent same-key calls.
             # Model invocation is deliberately outside this lock.
             with lock:
+                cache_hit = key in cache
                 if key not in cache:
                     cache[key] = recall()
                     if len(cache) > config.recall_cache_size:
@@ -103,5 +124,9 @@ def memory_projection(ctx, config):
                 hits = cache[key]
         messages = project_memory(request.messages, hits, budget)
         addition = messages[-1] if len(messages)>len(request.messages) else None
+        observe('projected',hit_count=len(hits),
+                injected_count=len(json.loads(addition.content.split('\n',1)[1])) if addition else 0,
+                injected_tokens=estimate_tokens(render_message(addition)) if addition else 0,
+                budget_tokens=budget,input_tokens=used,input_limit=limit,evidence_tokens=evidence)
         return next_fn(replace(request,messages=messages,memory_projection_message=addition))
     ctx.on('llm/request', project)
