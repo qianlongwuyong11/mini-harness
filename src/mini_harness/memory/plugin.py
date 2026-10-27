@@ -22,8 +22,13 @@ class MemoryPluginConfig:
     memory_tokens: int = 800
     scope_version: str = "1"
     recall_cache_size: int = 64
+    max_input_tokens: int = 80_000
+    reference_tokens: int = 6_800
 
     def __post_init__(self):
+        for value in (self.max_input_tokens,self.reference_tokens):
+            if type(value) is not int or value <= 0:
+                raise ValueError("Input and reference budgets must be positive integers")
         if not isinstance(self.scope_version,str) or not self.scope_version.strip():
             raise ValueError("scope_version must be nonempty")
         if type(self.recall_cache_size) is not int or not 1 <= self.recall_cache_size <= 1024:

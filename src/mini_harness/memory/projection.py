@@ -8,8 +8,12 @@ import json
 import logging
 
 from ..client import Message
-from ..meter import estimate_tokens, render_message
+from ..meter import estimate_tokens, render_message, TokenMeter
 from .contracts import MemoryBackendError
+
+
+class MemoryBudgetExceeded(ValueError):
+    """Existing request cannot fit; do not silently remove evidence or user text."""
 
 
 def project_memory(messages, hits, budget):
@@ -41,7 +45,19 @@ def memory_projection(ctx, config):
     ctx.effect(lambda: clear)
 
     def project(request, next_fn):
-        if config.memory_tokens == 0:
+        # Remove only this middleware's previously injected object, not text that
+        # merely resembles memory. Rebuild using the current request budget.
+        base = [m for m in request.messages if m is not request.memory_projection_message]
+        request = replace(request,messages=base,memory_projection_message=None)
+        meter = ctx.require("meter") if "meter" in ctx.service_names else TokenMeter()
+        limit = min(config.max_input_tokens, int(meter.context_window * 0.8))
+        used = meter.measure(base,request.schemas).total_tokens
+        evidence = sum(estimate_tokens(render_message(m)) for m in base
+                       if (m.content or "").startswith('本轮证据快照'))
+        if used > limit or evidence > config.reference_tokens:
+            raise MemoryBudgetExceeded("Existing request exceeds configured input/reference budget")
+        budget = min(config.memory_tokens,limit-used,config.reference_tokens-evidence)
+        if budget <= 0:
             return next_fn(request)
         event = next((event for event in reversed(request.session.events)
                       if event.type == 'user/message'
@@ -76,6 +92,7 @@ def memory_projection(ctx, config):
                         cache.popitem(last=False)
                 cache.move_to_end(key)
                 hits = cache[key]
-        messages = project_memory(request.messages, hits, config.memory_tokens)
-        return next_fn(replace(request, messages=messages))
+        messages = project_memory(request.messages, hits, budget)
+        addition = messages[-1] if len(messages)>len(request.messages) else None
+        return next_fn(replace(request,messages=messages,memory_projection_message=addition))
     ctx.on('llm/request', project)

@@ -55,6 +55,7 @@ class ModelRequest:
     purpose: str = "normal"
     retry_of: str | None = None
     evidence_ids: tuple[str, ...] = ()
+    memory_projection_message: Message | None = None
 
 
 @dataclass
