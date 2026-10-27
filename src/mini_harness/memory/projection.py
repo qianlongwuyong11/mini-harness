@@ -10,6 +10,7 @@ import logging
 from ..client import Message
 from ..meter import estimate_tokens, render_message, TokenMeter
 from .contracts import MemoryBackendError
+from .isolation import paper_scope_key
 
 
 class MemoryBudgetExceeded(ValueError):
@@ -44,7 +45,15 @@ def memory_projection(ctx, config):
             cache.clear()
     ctx.effect(lambda: clear)
 
+    last_scope = paper_scope_key(ctx)
     def project(request, next_fn):
+        nonlocal last_scope
+        scope = paper_scope_key(ctx)
+        with lock:
+            if scope != last_scope:
+                cache.clear()
+                last_scope = scope
+
         # Remove only this middleware's previously injected object, not text that
         # merely resembles memory. Rebuild using the current request budget.
         base = [m for m in request.messages if m is not request.memory_projection_message]
@@ -57,7 +66,7 @@ def memory_projection(ctx, config):
         if used > limit or evidence > config.reference_tokens:
             raise MemoryBudgetExceeded("Existing request exceeds configured input/reference budget")
         budget = min(config.memory_tokens,limit-used,config.reference_tokens-evidence)
-        if budget <= 0:
+        if budget <= 0 or scope is not None:
             return next_fn(request)
         event = next((event for event in reversed(request.session.events)
                       if event.type == 'user/message'

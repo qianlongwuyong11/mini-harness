@@ -66,7 +66,18 @@ def rag_consumer(ctx: Context, _config=None):
         'Only library_empty means the unfiltered library has no papers; uploading is appropriate then. '
         'Use the language of the user question.', order=71))
 
+    previous_selection = None
+    def refresh_selection():
+        nonlocal previous_selection
+        ids = selection['paper_ids']
+        key = None if ids is None else tuple(sorted(set(ids)))
+        if key != previous_selection:
+            ledger.begin()
+            current_results.clear()
+            previous_selection = key
+
     def list_papers(_args):
+        refresh_selection()
         selected = selection['paper_ids']
         all_papers = runtime.list_papers()
         # Discovery does not grant access to unselected paper contents.
@@ -85,6 +96,7 @@ def rag_consumer(ctx: Context, _config=None):
             library_status='nonempty' if inventory else 'empty',next_action=action),ensure_ascii=False)
 
     def scope(args):
+        refresh_selection()
         ids = args.get('paper_ids',[])
         if not isinstance(ids,list) or not ids or any(not isinstance(x,str) or not x for x in ids):
             raise ValueError('Explicit nonempty paper_ids required; call list_papers first')
@@ -115,6 +127,7 @@ def rag_consumer(ctx: Context, _config=None):
             notice='仅可引用当前轮证据；未返回的内容可能超过预算。'),ensure_ascii=False)
 
     def search(args):
+        refresh_selection()
         ledger.used = True
         top_k = args.get('top_k',5)
         if type(top_k) is not int:
@@ -126,6 +139,7 @@ def rag_consumer(ctx: Context, _config=None):
         return pack(runtime.search(query).evidence)
 
     def section(args):
+        refresh_selection()
         ledger.used = True
         selected = selection['paper_ids']
         if selected is not None and args['paper_id'] not in selected:
@@ -184,6 +198,7 @@ def rag_consumer(ctx: Context, _config=None):
     ctx.on('tools/execute',capture_result)
 
     def guard(request,next_fn):
+        refresh_selection()
         # This runs after prepare-request pruning and after compacted session projection.
         # A separate per-session ledger survives spill/prune/compact until the next turn.
         messages = project_results(request.messages, current_results)
